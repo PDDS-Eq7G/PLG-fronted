@@ -1,13 +1,13 @@
 import ArchivoUploader from "../ArchivoUploader/ArchivoUploader";
 
-const CargarPedidos = () => {
+const CargarAverias = () => {
   return (
     <ArchivoUploader
-      titulo="Cargar Pedidos"
-      endpoint="/api/pedido/importar"
+      titulo="Cargar Averías"
+      endpoint="/api/averia/importar"
       accept=".txt"
     />
   );
 };
 
-export default CargarPedidos;
+export default CargarAverias;

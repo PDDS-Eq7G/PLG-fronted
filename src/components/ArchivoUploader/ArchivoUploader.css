@@ -29,6 +29,7 @@
 }
 
 .custom-upload-button {
+  position: relative;
   display: inline-flex; /* Align icon and text nicely */
   align-items: center;
   justify-content: center;
