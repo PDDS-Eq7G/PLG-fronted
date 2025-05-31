@@ -1,0 +1,92 @@
+.main-container {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Arial', sans-serif;
+  background-color: #f8f9fa; /* Fondo claro similar al login */
+}
+
+/* Barra lateral - Ahora con tus colores */
+.sidebar {
+  width: 300px;
+  background-color: #ffffff; /* Fondo blanco */
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); /* Sutil sombra */
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-container {
+  padding: 25px 20px;
+  background-color: #3498db; /* Azul similar al botón de login */
+  text-align: center;
+  color: white;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 5px; /* Como en tu login */
+  margin-bottom: 10px;
+}
+
+.user-info {
+  font-size: 14px;
+  margin-top: 15px;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+.menu li {
+  padding: 15px 15px;
+  cursor: pointer;
+  color: #555; /* Color de texto más oscuro */
+  border-left: 4px solid transparent;
+  font-size: 15px;
+  margin: 5px 0;
+  border-radius: 8px; /* Bordes redondeados como en el login */
+  list-style-type: none;
+}
+
+.menu li:hover {
+  background-color: #e9ecef; /* Gris muy claro al hover */
+  color: #3498db; /* Azul al hover */
+  font-weight: bold;
+}
+
+.menu li.logout {
+  background-color: #777; /* Gris como tu botón de login */
+  color: white;
+  margin: 20px 10px 0 10px;
+}
+
+.menu li.logout:hover {
+  background-color: #5c5c5c; /* Gris oscuro al hover */
+}
+
+/* Área de contenido */
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff; /* Fondo blanco */
+}
+
+.header {
+  background-color: #ffffff;
+  color: #333;
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.main-content {
+  flex: 1;
+  padding: 25px;
+  background-color: #ffffff;
+}
