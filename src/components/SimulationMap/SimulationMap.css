@@ -1,0 +1,99 @@
+.map {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;      /* centra horizontalmente */
+  justify-content: center;  /* centra verticalmente */
+  background-color: #f8f8f8;
+}
+
+.grid-cell {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  background-color: #ecf0f1;
+}
+
+.grid-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  overflow: auto;
+  width: fit-content;
+  height: fit-content;
+  padding: 2rem;
+}
+
+.grid-map-container{
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.grid-inner {
+  transform: scale(1.5);
+  transform-origin: top left;
+}
+
+.zoom-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 999;
+  background-color: #ffffffcc;
+  padding: 10px 15px;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(4px);
+}
+
+.zoom-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  font-size: 20px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.1);
+}
+
+.zoom-label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.grid-map-frame {
+  width: 800px;               /* Fijo */
+  height: 600px;              /* Fijo */
+  overflow: auto;
+  border: 2px solid black;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  border-radius: 8px;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid-map-inner {
+  position: relative;
+}
