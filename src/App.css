@@ -15,34 +15,44 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  user-select: none;
-  background-color: #ecf0f1;
+  font-size: calc(10px + 2vmin);
+  color: white;
 }
 
-.grid-wrapper {
-  max-width: 90vw;
-  max-height: 70vh;
-  overflow: auto; /* permite scroll horizontal y vertical */
-  border: 2px solid #aaa;
-  padding: 10px;
-  background-color: #fff;
-  transform: scale(1.2); /* aumenta todo al 120% */
-  transform-origin: top left;
+.App-link {
+  color: #61dafb;
 }
 
-.grid-inner {
-  transform: scale(1.5);
-  transform-origin: top left;
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.zoom-controls {
+/* App.css (o donde definas tus estilos globales de layout) */
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.app-layout-container {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: row; /* Contenido principal a la izquierda, sidebar a la derecha */
+  height: 100vh; /* Ocupar toda la altura de la ventana */
+  overflow: hidden; /* Evitar scroll en el contenedor principal si los hijos manejan el suyo */
 }
 
-.zoom-controls button {
-  padding: 5px 10px;
-  font-size: 1rem;
-  cursor: pointer;
+.main-page-content {
+  flex-grow: 1; /* Ocupa todo el espacio disponible restante */
+  overflow-y: auto; /* Scroll para el contenido principal si es necesario */
+  padding: 20px; /* Espaciado interno */
+  background-color: #ffffff; /* Fondo del área de contenido principal */
+  transition: margin-right 0.35s ease-in-out; /* Si la sidebar empujara con margen */
+  /* Como la sidebar cambia su propio ancho y es un item flex,
+     flex-grow en main-page-content es suficiente para el ajuste. */
 }

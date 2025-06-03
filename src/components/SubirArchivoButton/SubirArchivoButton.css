@@ -1,0 +1,78 @@
+.cargar-pedidos-container {
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Or 'center' if you prefer */
+  gap: 15px; /* Space between elements */
+}
+
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 15px; /* Space between input and button */
+}
+
+.file-input {
+  /* You can style the default file input minimally,
+     though full customization is tricky across browsers. */
+  font-size: 1rem;
+  padding: 5px;
+}
+
+.custom-upload-button {
+  position: relative;
+  display: inline-flex; /* Align icon and text nicely */
+  align-items: center;
+  justify-content: center;
+  width: 148px;
+  height: 34px;
+  border: 1px solid #D0E9F9;
+  border-radius: 30px; /* Pill shape */
+  background-color: rgba(240, 238, 238, 0.3);
+  color: #005CD2;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  outline: none; /* Remove default browser outline if you handle focus differently */
+}
+
+.custom-upload-button:hover:not(:disabled) {
+  background-color: #f0f7ff; /* Very light blue tint on hover */
+  /* Or, for a darker effect:
+  background-color: #007aff;
+  color: #ffffff; */
+}
+
+.custom-upload-button:disabled {
+  background-color: white;
+  cursor: not-allowed;
+}
+
+.upload-message {
+  margin-top: 10px;
+  padding: 10px 15px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  width: 100%; /* Or max-width as appropriate */
+  box-sizing: border-box;
+}
+
+.upload-message.success {
+  background-color: #e6ffed;
+  color: #22863a;
+  border: 1px solid #c3e6cb;
+}
+
+.upload-message.error {
+  background-color: #ffebe9;
+  color: #cb2431;
+  border: 1px solid #f5c6cb;
+}
+
+.upload-icon {
+  width: 16px;
+  height: 16px;
+}
