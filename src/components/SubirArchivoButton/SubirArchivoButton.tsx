@@ -1,8 +1,8 @@
 import React, { useRef, useState } from "react";
 import NotificationPopup from "../NotificationPopup/NotificationPopup";
-import UploadIcon from "../../icons/UploadIcon";
+import UploadFileIcon from "../../icons/UploadFileIcon";
 import API_URL from "../../config";
-import "./ArchivoUploader.css";
+import "./SubirArchivoButton.css";
 
 type Props = {
   titulo: string;
@@ -13,7 +13,7 @@ type Props = {
   onUploadError?: (error: string) => void;
 };
 
-const ArchivoUploader: React.FC<Props> = ({
+const SubirArchivoButton: React.FC<Props> = ({
   titulo,
   endpoint,
   formFieldName = "file",
@@ -92,7 +92,6 @@ const ArchivoUploader: React.FC<Props> = ({
           onClose={cerrarPopup}
         />
       )}
-      <h2>{titulo}</h2>
       <form onSubmit={(e) => e.preventDefault()} className="upload-form">
         <input
           type="file"
@@ -108,7 +107,7 @@ const ArchivoUploader: React.FC<Props> = ({
           className="custom-upload-button"
         >
           <span style={{ visibility: "hidden" }}>
-            <UploadIcon /> {titulo}
+            <UploadFileIcon /> {titulo}
           </span>
           <span
             style={{
@@ -120,7 +119,7 @@ const ArchivoUploader: React.FC<Props> = ({
               pointerEvents: "none",
             }}
           >
-            {cargando ? "Cargando..." : <><UploadIcon /> {titulo}</>}
+            {cargando ? "Cargando..." : <><UploadFileIcon /> {titulo}</>}
           </span>
         </button>
       </form>
@@ -128,4 +127,4 @@ const ArchivoUploader: React.FC<Props> = ({
   );
 };
 
-export default ArchivoUploader;
+export default SubirArchivoButton;

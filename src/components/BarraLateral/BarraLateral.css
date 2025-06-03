@@ -1,0 +1,112 @@
+.collapsible-sidebar-right {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  border-left: 1px solid #d1d1d1;
+  background-color: #FBFBFB; /* Fondo de la toggle-bar se extiende aquí */
+  /* width y transition se establecen inline desde el componente JS */
+  overflow: hidden; 
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.sidebar-right-toggle-bar {
+  height: 50px;
+  background-color: #FBFBFB;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid #e7e7e7;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Comportamiento del texto y el ícono en la barra de control */
+.collapsible-sidebar-right.expanded .sidebar-right-toggle-bar {
+  justify-content: space-between; /* Texto a la izq, ícono a la der */
+}
+.collapsible-sidebar-right.collapsed .sidebar-right-toggle-bar {
+  justify-content: center; /* Ícono centrado */
+  border-bottom: none;
+}
+
+.sidebar-right-toggle-text {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 1;
+  max-width: 280px; /* Ajusta según el ancho de tu barra menos el ícono y paddings */
+  transition: opacity 0.2s ease-in-out, max-width 0.2s ease-in-out 0.05s; /* Pequeño retraso para max-width */
+}
+.collapsible-sidebar-right.collapsed .sidebar-right-toggle-text {
+  opacity: 0;
+  max-width: 0; /* Ayuda a que desaparezca limpiamente */
+  pointer-events: none; /* Evitar interacciones con texto oculto */
+}
+
+.sidebar-right-toggle-icon {
+  stroke: #4a4a4a;
+  margin-left: 8px; /* Espacio por defecto */
+}
+.collapsible-sidebar-right.collapsed .sidebar-right-toggle-icon {
+  margin-left: 0; /* Sin margen si está centrado y no hay texto */
+}
+
+
+/* Wrapper para el contenido principal de la sidebar */
+.sidebar-right-content-wrapper {
+  flex-grow: 1;
+  overflow: hidden; /* Clave para contener la animación del contenido */
+  opacity: 0; /* Inicia oculto */
+  transform: translateX(10px); /* Inicia ligeramente desplazado para un efecto de entrada */
+  
+  /* Transiciones para la aparición/desaparición del contenido */
+  transition-property: opacity, transform;
+  transition-timing-function: ease-in-out;
+}
+
+/* Cuando la barra lateral está expandida y el contenido debe ser visible */
+.collapsible-sidebar-right.expanded .sidebar-right-content-wrapper {
+  opacity: 1;
+  transform: translateX(0);
+  transition-duration: 0.25s; /* Duración de la animación del contenido al aparecer */
+  /* Retraso para que la animación del contenido comience DESPUÉS de que el ancho de la barra haya comenzado a cambiar.
+     Si animationDurationMs es 350ms para el ancho, un retraso de 100-150ms puede funcionar bien. */
+  transition-delay: 0.1s; 
+}
+
+/* Cuando la barra lateral está colapsada y el contenido debe ocultarse */
+.collapsible-sidebar-right.collapsed .sidebar-right-content-wrapper {
+  opacity: 0;
+  transform: translateX(10px);
+  transition-duration: 0.15s; /* El contenido puede desaparecer más rápido */
+  transition-delay: 0s; /* Sin retraso al ocultar */
+  pointer-events: none; /* Importante para evitar interacción con contenido invisible */
+}
+
+/* El contenedor real del contenido (hijo del wrapper) */
+.sidebar-right-main-content {
+  height: 100%; /* Para que ocupe todo el wrapper */
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #f0f0f5; /* Fondo del área de contenido */
+  /* El ControlDeMando y otros hijos deben gestionar su propio padding interno */
+}
+
+/* Ajustes para el .control-de-mando-panel cuando está dentro */
+.sidebar-right-main-content .control-de-mando-panel {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  box-shadow: none;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+}

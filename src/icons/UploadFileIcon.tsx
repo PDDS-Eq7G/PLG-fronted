@@ -1,6 +1,6 @@
 import React from "react";
 
-const UploadIcon: React.FC = () => (
+const UploadFileIcon: React.FC = () => (
   <svg
     className="upload-icon"
     xmlns="http://www.w3.org/2000/svg"
@@ -9,8 +9,8 @@ const UploadIcon: React.FC = () => (
     strokeWidth="1.7"
     stroke="currentColor"
     aria-hidden="true"
-    width="1.2em"
-    height="1.2em"
+    width="16"
+    height="16"
     style={{ marginRight: "8px" }}
   >
     <path
@@ -21,4 +21,4 @@ const UploadIcon: React.FC = () => (
   </svg>
 );
 
-export default UploadIcon;
+export default UploadFileIcon;

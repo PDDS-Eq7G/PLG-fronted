@@ -1,8 +1,8 @@
-import ArchivoUploader from "../ArchivoUploader/ArchivoUploader";
+import SubirArchivoButton from "../SubirArchivoButton/SubirArchivoButton";
 
 const CargarMantenimientos = () => {
   return (
-    <ArchivoUploader
+    <SubirArchivoButton
       titulo="Cargar Mantenimiento"
       endpoint="/api/mantenimiento/importar"
       accept=".txt"
