@@ -29,11 +29,7 @@ const SimulationMap: React.FC = () => {
 
   return (
     <div className="app-container">
-      <div className="zoom-controls">
-        <button className= "zoom-button" onClick={() => setCellSize(s => Math.min(s + 5, 100))}>+</button>
-        <button className= "zoom-button" onClick={() => setCellSize(s => Math.max(s - 5, 10))}>−</button>
-        <span className="zoom-label">{cellSize}px</span>
-      </div>
+
 
       <div className="grid-map-frame">
         <div
