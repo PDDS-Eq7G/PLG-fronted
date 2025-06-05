@@ -1,5 +1,5 @@
 // src/components/ControlDeMando/ControlDeMandoCompleto.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FechaInicioDateTimePicker from './FechaInicioDateTimePicker';
 import ReproduccionSimulacionControls, { SIMULATION_SPEEDS } from './ReproduccionSimulacionControls';
 import CargarPedidos from '../CargarPedidos/CargarPedidos';
@@ -7,21 +7,29 @@ import CargarAverias from '../CargarAverias/CargarAverias';
 import CancelarSimulacionButton from './CancelarSimulacionButton';
 import './ControlDeMando.css';
 
-const ControlDeMandoCompleto: React.FC = () => {
-  // Estados de ejemplo para los componentes hijos
-  const [fechaInicio, setFechaInicio] = useState<Date | null>(new Date()); // Fecha actual por defecto
-  const [currentSpeed, setCurrentSpeed] = useState<number>(SIMULATION_SPEEDS.PAUSED);
+// ✅ Props opcionales
+interface Props {
+  simulationSpeed?: number;
+  setSimulationSpeed?: (speed: number) => void;
+}
+
+const ControlDeMandoCompleto: React.FC<Props> = ({ simulationSpeed, setSimulationSpeed }) => {
+  const [fechaInicio, setFechaInicio] = useState<Date | null>(new Date());
+  const [internalSpeed, setInternalSpeed] = useState<number>(SIMULATION_SPEEDS.PAUSED);
+
+  // ✅ Sync si viene velocidad externa
+  const currentSpeed = simulationSpeed !== undefined ? simulationSpeed : internalSpeed;
+  const updateSpeed = (speed: number) => {
+    if (setSimulationSpeed) {
+      setSimulationSpeed(speed); 
+    } else {
+      setInternalSpeed(speed);
+    }
+  };
 
   const handleCancelSimulation = () => {
     console.log("Simulación cancelada");
-    // Lógica para cancelar la simulación
-  };
-
-  // Aquí es donde conectarías con tu lógica global de estado de simulación o un contexto
-  const handleSetSpeed = (speed: number) => {
-    console.log("Nueva velocidad de simulación:", speed);
-    setCurrentSpeed(speed);
-    // Ejemplo: updateGlobalSimulationSpeed(speed);
+    updateSpeed(SIMULATION_SPEEDS.PAUSED);
   };
 
   return (
@@ -38,7 +46,7 @@ const ControlDeMandoCompleto: React.FC = () => {
       <div className="panel-section">
         <ReproduccionSimulacionControls
           currentSpeed={currentSpeed}
-          onSetSpeed={handleSetSpeed}
+          onSetSpeed={updateSpeed}
         />
       </div>
 

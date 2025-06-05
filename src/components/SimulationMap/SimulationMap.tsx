@@ -1,11 +1,32 @@
-import React, { useState } from 'react';
+// src/components/SimulationMap/SimulationMap.tsx
+import React, { useEffect, useState } from 'react';
 import './SimulationMap.css';
 import { GridMap } from '../GridMap/GridMap';
 import { GridCellData } from '../../types/map';
-import { Truck } from '../Truck/Truck';
+import Truck from '../Truck/Truck';
+import { SIMULATION_SPEEDS } from '../ControlDeMando/ReproduccionSimulacionControls';
+import ReproduccionSimulacionControls from '../ControlDeMando/ReproduccionSimulacionControls';
+
+interface Position {
+  x: number;
+  y: number;
+}
+
+interface FlotaMock {
+  codigo: string;
+  route: Position[];
+}
 
 const gridSizeX = 70;
 const gridSizeY = 50;
+
+const getColorForTruck = (codigo: string) => {
+  if (codigo.startsWith('TA')) return '#D300DE';
+  if (codigo.startsWith('TB')) return '#FFDE00';
+  if (codigo.startsWith('TC')) return '#00A35C';
+  if (codigo.startsWith('TD')) return '#BF360C';
+  return '#999999';
+};
 
 const createGrid = (): GridCellData[][] => {
   const grid: GridCellData[][] = [];
@@ -23,31 +44,53 @@ const createGrid = (): GridCellData[][] => {
   return grid;
 };
 
-const SimulationMap: React.FC = () => {
+interface SimulationMapProps {
+  simulationSpeed: number;
+}
+
+const SimulationMap: React.FC<SimulationMapProps> = ({ simulationSpeed }) => {
   const [cellSize, setCellSize] = useState(13);
+  const [flota, setFlota] = useState<FlotaMock[]>([]);
+  const [speed, setSpeed] = useState(SIMULATION_SPEEDS.PAUSED);
   const gridData = createGrid();
+
+  const simulationRunning = speed === SIMULATION_SPEEDS.PLAY_NORMAL;
+
+  useEffect(() => {
+    fetch('/mockFlota.json')
+      .then(res => res.json())
+      .then(data => setFlota(data.flota))
+      .catch(err => console.error('Error al cargar flota simulada:', err));
+  }, []);
 
   return (
     <div className="app-container">
-
-
       <div className="grid-map-frame">
         <div
           className="grid-map-inner"
           style={{
             width: `${cellSize * gridSizeX}px`,
             height: `${cellSize * gridSizeY}px`,
-            position: 'relative'
+            position: 'relative',
           }}
         >
           <GridMap gridData={gridData} cellSize={cellSize} />
 
-          <Truck id="TR1" start={{ x: 10, y: 10 }} end={{ x: 30, y: 35 }} cellSize={cellSize} />
-          <Truck id="TR2" start={{ x: 20, y: 5 }} end={{ x: 60, y: 45 }} cellSize={cellSize} speed={50} />
-          <Truck id="TR3" start={{ x: 30, y: 5 }} end={{ x: 69, y: 45 }} cellSize={cellSize} speed={200} />
-          <Truck id="TR4" start={{ x: 69, y: 10 }} end={{ x: 12, y: 12 }} cellSize={cellSize} speed={200} />
+          {flota.map((camion) => (
+            <Truck
+              key={camion.codigo}
+              id={camion.codigo}
+              route={camion.route}
+              cellSize={cellSize}
+              color={getColorForTruck(camion.codigo)}
+              gridSizeY={gridSizeY}
+              isRunning={simulationSpeed === SIMULATION_SPEEDS.PLAY_NORMAL}
+            />
+          ))}
         </div>
       </div>
+
+      
     </div>
   );
 };

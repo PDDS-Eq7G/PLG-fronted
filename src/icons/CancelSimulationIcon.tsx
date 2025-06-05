@@ -20,3 +20,5 @@ const CancelSimulacionIcon: React.FC = () => (
 );
 
 export default CancelSimulacionIcon;
+
+
