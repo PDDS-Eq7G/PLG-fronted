@@ -5,7 +5,7 @@ import { GridMap } from '../GridMap/GridMap';
 import { GridCellData } from '../../types/map';
 import Truck from '../Truck/Truck';
 import { SIMULATION_SPEEDS } from '../ControlDeMando/ReproduccionSimulacionControls';
-import ReproduccionSimulacionControls from '../ControlDeMando/ReproduccionSimulacionControls';
+import PedidoIcon from '../Pedido/Pedido'; // ✅ NUEVO COMPONENTE
 
 interface Position {
   x: number;
@@ -15,6 +15,10 @@ interface Position {
 interface FlotaMock {
   codigo: string;
   route: Position[];
+  pedido: {
+    id: string;
+    ubicacion: Position;
+  };
 }
 
 const gridSizeX = 70;
@@ -51,10 +55,7 @@ interface SimulationMapProps {
 const SimulationMap: React.FC<SimulationMapProps> = ({ simulationSpeed }) => {
   const [cellSize, setCellSize] = useState(13);
   const [flota, setFlota] = useState<FlotaMock[]>([]);
-  const [speed, setSpeed] = useState(SIMULATION_SPEEDS.PAUSED);
   const gridData = createGrid();
-
-  const simulationRunning = speed === SIMULATION_SPEEDS.PLAY_NORMAL;
 
   useEffect(() => {
     fetch('/mockFlota.json')
@@ -62,6 +63,8 @@ const SimulationMap: React.FC<SimulationMapProps> = ({ simulationSpeed }) => {
       .then(data => setFlota(data.flota))
       .catch(err => console.error('Error al cargar flota simulada:', err));
   }, []);
+
+const isPlaying = simulationSpeed === SIMULATION_SPEEDS.PLAY_NORMAL;
 
   return (
     <div className="app-container">
@@ -77,20 +80,27 @@ const SimulationMap: React.FC<SimulationMapProps> = ({ simulationSpeed }) => {
           <GridMap gridData={gridData} cellSize={cellSize} />
 
           {flota.map((camion) => (
-            <Truck
-              key={camion.codigo}
-              id={camion.codigo}
-              route={camion.route}
-              cellSize={cellSize}
-              color={getColorForTruck(camion.codigo)}
-              gridSizeY={gridSizeY}
-              isRunning={simulationSpeed === SIMULATION_SPEEDS.PLAY_NORMAL}
-            />
+             <React.Fragment key={camion.codigo}>
+              {isPlaying && (
+                <PedidoIcon
+                  position={camion.pedido.ubicacion}
+                  cellSize={cellSize}
+                  gridSizeY={gridSizeY}
+                />
+              )}
+
+              <Truck
+                id={camion.codigo}
+                route={camion.route}
+                cellSize={cellSize}
+                color={getColorForTruck(camion.codigo)}
+                gridSizeY={gridSizeY}
+                isRunning={simulationSpeed === SIMULATION_SPEEDS.PLAY_NORMAL}
+              />
+            </React.Fragment>
           ))}
         </div>
       </div>
-
-      
     </div>
   );
 };
