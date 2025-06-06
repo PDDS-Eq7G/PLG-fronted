@@ -5,6 +5,7 @@ import ReproduccionSimulacionControls, { SIMULATION_SPEEDS } from './Reproduccio
 import CargarPedidos from '../CargarPedidos/CargarPedidos';
 import CargarAverias from '../CargarAverias/CargarAverias';
 import CancelarSimulacionButton from './CancelarSimulacionButton';
+import ListaFlotaYPedidos from '../ListaFlotaYPedidos/ListaFlotaYPedidos';
 import './ControlDeMando.css';
 
 // ✅ Props opcionales
@@ -36,14 +37,14 @@ const ControlDeMandoCompleto: React.FC<Props> = ({ simulationSpeed, setSimulatio
     <div className="control-de-mando-panel">
       <div className="panel-header">Control de Mando</div>
 
-      <div className="panel-section">
+      <div className="panel-section compact">
         <FechaInicioDateTimePicker
           selectedDateTime={fechaInicio}
           onChange={setFechaInicio}
         />
       </div>
 
-      <div className="panel-section">
+      <div className="panel-section compact">
         <ReproduccionSimulacionControls
           currentSpeed={currentSpeed}
           onSetSpeed={updateSpeed}
@@ -55,10 +56,14 @@ const ControlDeMandoCompleto: React.FC<Props> = ({ simulationSpeed, setSimulatio
         <CargarAverias />
       </div>
 
-      <div className="panel-section">
+      <div className="panel-section compact">
         <CancelarSimulacionButton onClick={handleCancelSimulation} />
       </div>
+      <div className="panel-section lista-flota">
+        <ListaFlotaYPedidos />
+      </div>
     </div>
+    
   );
 };
 

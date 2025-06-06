@@ -27,11 +27,20 @@
 
 /* Secciones dentro del panel */
 .panel-section {
-  height: 58px;
   border-bottom: 1px solid #D7D7D7;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px 0;
+}
+.panel-section.compact {
+  height: 58px;
+}
+.panel-section.lista-flota {
+  flex-grow: 1;
+  overflow: auto;
+  min-height: 0;
+  display: block; /* ← importante para que las tablas se muestren bien */
 }
 
 /*.panel-section:last-child {
@@ -242,3 +251,4 @@
   width: 20px;
   height: 20px;
 }
+
