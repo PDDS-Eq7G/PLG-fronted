@@ -23,7 +23,11 @@ export const GridCell: React.FC<Props> = ({ data, size }) => {
       style={{
         width: size,
         height: size,
-        fontSize: size * 0.6
+        fontSize: size * 0.6,
+        border: '1px solid #ccc',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       {getIcon()}

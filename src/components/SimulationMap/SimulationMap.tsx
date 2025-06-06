@@ -1,24 +1,21 @@
-// src/components/SimulationMap/SimulationMap.tsx
 import React, { useEffect, useState } from 'react';
 import './SimulationMap.css';
 import { GridMap } from '../GridMap/GridMap';
 import { GridCellData } from '../../types/map';
 import Truck from '../Truck/Truck';
-import { SIMULATION_SPEEDS } from '../ControlDeMando/ReproduccionSimulacionControls';
-import ReproduccionSimulacionControls from '../ControlDeMando/ReproduccionSimulacionControls';
+import { useSimulacion } from '../../context/SimulacionContext';
+import { useConfig } from '../../context/ConfigContext';
+import { getTanques, getFlota } from '../../api/index';
 
 interface Position {
   x: number;
   y: number;
 }
 
-interface FlotaMock {
+interface Flota {
   codigo: string;
   route: Position[];
 }
-
-const gridSizeX = 70;
-const gridSizeY = 50;
 
 const getColorForTruck = (codigo: string) => {
   if (codigo.startsWith('TA')) return '#D300DE';
@@ -28,40 +25,91 @@ const getColorForTruck = (codigo: string) => {
   return '#999999';
 };
 
-const createGrid = (): GridCellData[][] => {
+const createGridFromConfig = (
+  ancho: number,
+  alto: number,
+  almacen: Position,
+  tanques: Position[]
+): GridCellData[][] => {
   const grid: GridCellData[][] = [];
-  for (let y = 0; y < gridSizeY; y++) {
+
+  for (let y = 0; y < alto; y++) {
     const row: GridCellData[] = [];
-    for (let x = 0; x < gridSizeX; x++) {
+    for (let x = 0; x < ancho; x++) {
       row.push({ x, y, type: 'empty' });
     }
     grid.push(row);
   }
 
-  grid[12][8] = { x: 12, y: 8, type: 'central' };
-  grid[7][6] = { x: 7, y: 6, type: 'intermediate' };
+  const invertY = (y: number) => alto - 1 - y;
+
+  grid[invertY(almacen.y)][almacen.x] = {
+    x: almacen.x,
+    y: almacen.y,
+    type: 'central',
+  };
+
+  tanques.forEach((t) => {
+    if (t.x < ancho && t.y < alto) {
+      grid[invertY(t.y)][t.x] = {
+        x: t.x,
+        y: t.y,
+        type: 'intermediate',
+      };
+    }
+  });
 
   return grid;
 };
 
-interface SimulationMapProps {
-  simulationSpeed: number;
-}
+const SimulationMap: React.FC = () => {
+  const [gridData, setGridData] = useState<GridCellData[][]>([]);
+  const [cellSize] = useState(13);
+  const [flota, setFlota] = useState<Flota[]>([]);
+  const [gridSizeX, setGridSizeX] = useState(0);
+  const [gridSizeY, setGridSizeY] = useState(0);
+  const { velocidad } = useSimulacion();
+  const { config, loading: configLoading } = useConfig();
 
-const SimulationMap: React.FC<SimulationMapProps> = ({ simulationSpeed }) => {
-  const [cellSize, setCellSize] = useState(13);
-  const [flota, setFlota] = useState<FlotaMock[]>([]);
-  const [speed, setSpeed] = useState(SIMULATION_SPEEDS.PAUSED);
-  const gridData = createGrid();
-
-  const simulationRunning = speed === SIMULATION_SPEEDS.PLAY_NORMAL;
+  const simulationRunning = velocidad !== 0;
 
   useEffect(() => {
-    fetch('/mockFlota.json')
-      .then(res => res.json())
-      .then(data => setFlota(data.flota))
-      .catch(err => console.error('Error al cargar flota simulada:', err));
-  }, []);
+    const fetchData = async () => {
+      try {
+        const [tanquesRes, flotaRes] = await Promise.all([getTanques(), getFlota()]);
+        console.log(config);
+        console.log(`Velocidad: ${velocidad}`);
+
+        const ancho = parseInt(config.ancho_ciudad, 10);
+        const alto = parseInt(config.alto_ciudad, 10);
+        const almacenX = parseInt(config.almacen_central_x, 10);
+        const almacenY = parseInt(config.almacen_central_y, 10);
+
+        const tanques: Position[] = (tanquesRes.data.tanquesIntermedios || []).map((t: any) => ({
+          x: t.ubicacion.x,
+          y: t.ubicacion.y,
+        }));
+
+        const grid = createGridFromConfig(ancho, alto, { x: almacenX, y: almacenY }, tanques);
+
+        const flotaTransformada: Flota[] = (flotaRes.data.flota || []).map((camion: any) => ({
+          codigo: camion.codigo,
+          route: camion.NodoActual ? [{ x: camion.NodoActual.x, y: camion.NodoActual.y }] : [],
+        }));
+
+        setGridSizeX(ancho);
+        setGridSizeY(alto);
+        setGridData(grid);
+        setFlota(flotaTransformada);
+      } catch (err) {
+        console.error('Error al cargar datos para el mapa:', err);
+      }
+    };
+
+    if (!configLoading) {
+      fetchData();
+    }
+  }, [config, configLoading]);
 
   return (
     <div className="app-container">
@@ -84,13 +132,12 @@ const SimulationMap: React.FC<SimulationMapProps> = ({ simulationSpeed }) => {
               cellSize={cellSize}
               color={getColorForTruck(camion.codigo)}
               gridSizeY={gridSizeY}
-              isRunning={simulationSpeed === SIMULATION_SPEEDS.PLAY_NORMAL}
+              isRunning={simulationRunning}
+              speed={velocidad}
             />
           ))}
         </div>
       </div>
-
-      
     </div>
   );
 };

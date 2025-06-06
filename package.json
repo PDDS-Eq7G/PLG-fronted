@@ -2,6 +2,7 @@
   "name": "plg-frontend",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:8080",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -11,6 +12,7 @@
     "@types/node": "^16.18.126",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
+    "axios": "^1.9.0",
     "date-fns": "^4.1.0",
     "react": "^19.1.0",
     "react-datepicker": "^8.4.0",

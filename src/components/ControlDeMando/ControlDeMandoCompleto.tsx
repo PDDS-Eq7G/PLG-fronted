@@ -1,35 +1,45 @@
-// src/components/ControlDeMando/ControlDeMandoCompleto.tsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import FechaInicioDateTimePicker from './FechaInicioDateTimePicker';
-import ReproduccionSimulacionControls, { SIMULATION_SPEEDS } from './ReproduccionSimulacionControls';
+import ReproduccionSimulacionControls from './ReproduccionSimulacionControls';
 import CargarPedidos from '../CargarPedidos/CargarPedidos';
 import CargarAverias from '../CargarAverias/CargarAverias';
 import CancelarSimulacionButton from './CancelarSimulacionButton';
+import { useSimulacion } from '../../context/SimulacionContext';
 import './ControlDeMando.css';
+import { useSimuladorPlanificacion } from '../../hooks/useSimuladorPlanificacion';
 
-// ✅ Props opcionales
-interface Props {
-  simulationSpeed?: number;
-  setSimulationSpeed?: (speed: number) => void;
-}
+const ControlDeMandoCompleto: React.FC = () => {
+  const { velocidad, setVelocidad, velocidadReal, setVelocidadReal, minSpeed, maxSpeed } = useSimulacion();
+  const [fechaInicio, setFechaInicio] = React.useState<Date | null>(new Date());
+  const [isSimulando, setIsSimulando] = React.useState(false);
+  const [simData, setSimData] = React.useState<any[]>([]);
 
-const ControlDeMandoCompleto: React.FC<Props> = ({ simulationSpeed, setSimulationSpeed }) => {
-  const [fechaInicio, setFechaInicio] = useState<Date | null>(new Date());
-  const [internalSpeed, setInternalSpeed] = useState<number>(SIMULATION_SPEEDS.PAUSED);
+  const onNewData = (dataChunk: any[]) => {
+    setSimData((prev) => [...prev, ...dataChunk]);
+  };
 
-  // ✅ Sync si viene velocidad externa
-  const currentSpeed = simulationSpeed !== undefined ? simulationSpeed : internalSpeed;
-  const updateSpeed = (speed: number) => {
-    if (setSimulationSpeed) {
-      setSimulationSpeed(speed); 
+  const { reiniciar } = useSimuladorPlanificacion(fechaInicio, isSimulando, onNewData);
+
+  const clampSpeed = (speed: number) => Math.min(maxSpeed, Math.max(minSpeed, speed));
+
+  const handleSetSpeed = (speed: number) => {
+    if (speed === 0) {
+      setVelocidad(0);
+      setIsSimulando(false);
     } else {
-      setInternalSpeed(speed);
+      const nuevaVelocidad = clampSpeed(speed);
+      setVelocidadReal(nuevaVelocidad);
+      setVelocidad(nuevaVelocidad);
+      setIsSimulando(true); // <-- Aquí activa el planificador
+      console.log(`Velocidad: ${velocidad}`);
     }
   };
 
   const handleCancelSimulation = () => {
-    console.log("Simulación cancelada");
-    updateSpeed(SIMULATION_SPEEDS.PAUSED);
+    reiniciar();
+    setIsSimulando(false);
+    setVelocidad(0); // Opcional: pausar visualmente
+    console.log('Simulación cancelada');
   };
 
   return (
@@ -37,16 +47,16 @@ const ControlDeMandoCompleto: React.FC<Props> = ({ simulationSpeed, setSimulatio
       <div className="panel-header">Control de Mando</div>
 
       <div className="panel-section">
-        <FechaInicioDateTimePicker
-          selectedDateTime={fechaInicio}
-          onChange={setFechaInicio}
-        />
+        <FechaInicioDateTimePicker selectedDateTime={fechaInicio} onChange={setFechaInicio} />
       </div>
 
       <div className="panel-section">
         <ReproduccionSimulacionControls
-          currentSpeed={currentSpeed}
-          onSetSpeed={updateSpeed}
+          currentSpeed={velocidad}
+          onSetSpeed={handleSetSpeed}
+          minSpeed={minSpeed}
+          maxSpeed={maxSpeed}
+          lastRealSpeed={velocidadReal}
         />
       </div>
 

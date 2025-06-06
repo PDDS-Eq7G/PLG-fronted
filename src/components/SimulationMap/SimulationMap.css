@@ -8,8 +8,7 @@
 }
 
 .grid-cell {
-  width: 20px;
-  height: 20px;
+  /* quita width y height para que lo controle React inline styles */
   border: 1px solid #ccc;
   font-size: 14px;
   display: flex;
@@ -18,6 +17,7 @@
   user-select: none;
   background-color: #ecf0f1;
 }
+
 
 .grid-wrapper {
   display: flex;
@@ -82,8 +82,8 @@
 }
 
 .grid-map-frame {
-  width: 800px;               /* Fijo */
-  height: 600px;              /* Fijo */
+  width: 100%;               /* Fijo */
+  height: 100%;              /* Fijo */
   overflow: auto;
   border: 2px solid black;
   box-shadow: 0 0 10px rgba(0,0,0,0.2);

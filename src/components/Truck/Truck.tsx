@@ -1,4 +1,3 @@
-// src/components/Truck/Truck.tsx
 import React, { useEffect, useState } from 'react';
 import TruckSvgIcon from '../../icons/TruckSvgIcon';
 
@@ -14,7 +13,7 @@ interface TruckProps {
   gridSizeY: number;
   speed?: number;
   color?: string;
-  isRunning?: boolean; // ✅ NUEVA PROP
+  isRunning?: boolean;
 }
 
 export const Truck: React.FC<TruckProps> = ({
@@ -24,7 +23,7 @@ export const Truck: React.FC<TruckProps> = ({
   gridSizeY,
   speed = 300,
   color,
-  isRunning = false, // ✅ default false
+  isRunning = false,
 }) => {
   const [step, setStep] = useState(0);
   const [trailSteps, setTrailSteps] = useState<number[]>([]);
@@ -41,6 +40,7 @@ export const Truck: React.FC<TruckProps> = ({
   }, [isRunning, step, route, speed]);
 
   const current = route[step];
+  if (!current) return null; // Evitar error si no hay posición actual
 
   const getTop = (y: number) => (gridSizeY - 1 - y) * cellSize;
 
@@ -48,6 +48,7 @@ export const Truck: React.FC<TruckProps> = ({
     <>
       {trailSteps.map((trailIndex, i) => {
         const pos = route[trailIndex];
+        if (!pos) return null;
         return (
           <div
             key={i}
