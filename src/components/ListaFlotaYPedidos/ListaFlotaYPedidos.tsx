@@ -27,7 +27,6 @@ interface ListaFlotaYPedidosProps {
   disabled?: boolean;
 }
 
-// Datos de ejemplo basados en las imágenes
 const defaultFlotaData: FlotaData[] = [
   { codigo: "TA01", posicion: "(16, 10)", capacidad: "10/25 (40%)" },
   { codigo: "TA02", posicion: "(24, 17)", capacidad: "11/25 (44%)" },
@@ -71,12 +70,44 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
   disabled = false,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
+  const [searchText, setSearchText] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const handleTabClick = (tab: TabType) => {
     if (disabled) return;
-
     setActiveTab(tab);
+    setCurrentPage(1); // Reiniciar a la página 1 al cambiar de pestaña
     onTabChange?.(tab);
+  };
+
+  const filteredFlotaData = flotaData.filter((item) =>
+    item.codigo.toLowerCase().includes(searchText.toLowerCase())
+  );
+  const filteredPedidosData = pedidosData.filter((item) =>
+    item.codigo.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const paginatedFlotaData = filteredFlotaData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  const paginatedPedidosData = filteredPedidosData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages =
+    activeTab === TabType.FLOTA
+      ? Math.ceil(filteredFlotaData.length / itemsPerPage)
+      : Math.ceil(filteredPedidosData.length / itemsPerPage);
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
   const renderFlotaTable = () => (
@@ -90,7 +121,7 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
           </tr>
         </thead>
         <tbody>
-          {flotaData.map((item, index) => (
+          {paginatedFlotaData.map((item, index) => (
             <tr key={index}>
               <td>{item.codigo}</td>
               <td>{item.posicion}</td>
@@ -113,7 +144,7 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
           </tr>
         </thead>
         <tbody>
-          {pedidosData.map((item, index) => (
+          {paginatedPedidosData.map((item, index) => (
             <tr key={index}>
               <td>{item.codigo}</td>
               <td>{item.posicion}</td>
@@ -151,9 +182,14 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
       <div className="search-container">
         <input
           type="text"
-          placeholder="Buscar..."
+          placeholder="Buscar por código..."
           className="search-input"
           disabled={disabled}
+          value={searchText}
+          onChange={(e) => {
+            setSearchText(e.target.value);
+            setCurrentPage(1); // Reiniciar página al buscar
+          }}
         />
         <div className="search-icon">🔍</div>
       </div>
@@ -165,11 +201,21 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
       </div>
 
       <div className="pagination-container">
-        <button className="pagination-button" disabled={disabled}>
+        <button
+          className="pagination-button"
+          onClick={goToPreviousPage}
+          disabled={disabled || currentPage === 1}
+        >
           {"<"}
         </button>
-        <span className="pagination-info">1 de 46 de</span>
-        <button className="pagination-button" disabled={disabled}>
+        <span className="pagination-info">
+          Página {currentPage} de {totalPages}
+        </span>
+        <button
+          className="pagination-button"
+          onClick={goToNextPage}
+          disabled={disabled || currentPage === totalPages}
+        >
           {">"}
         </button>
       </div>
