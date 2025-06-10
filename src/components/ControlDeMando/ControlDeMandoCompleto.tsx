@@ -1,36 +1,34 @@
 // src/components/ControlDeMando/ControlDeMandoCompleto.tsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import FechaInicioDateTimePicker from './FechaInicioDateTimePicker';
-import ReproduccionSimulacionControls, { SIMULATION_SPEEDS } from './ReproduccionSimulacionControls';
+import ReproduccionSimulacionControls from './ReproduccionSimulacionControls';
 import CargarPedidos from '../CargarPedidos/CargarPedidos';
 import CargarAverias from '../CargarAverias/CargarAverias';
 import CancelarSimulacionButton from './CancelarSimulacionButton';
 import ListaFlotaYPedidos from '../ListaFlotaYPedidos/ListaFlotaYPedidos';
 import './ControlDeMando.css';
 
-// ✅ Props opcionales
+import { useSimulacion } from '../../context/SimulacionContext';
+import { SIMULATION_SPEEDS } from './ReproduccionSimulacionControls';
+
 interface Props {
-  simulationSpeed?: number;
-  setSimulationSpeed?: (speed: number) => void;
+  fechaInicio: Date | null;
+  setFechaInicio: (date: Date | null) => void;
 }
 
-const ControlDeMandoCompleto: React.FC<Props> = ({ simulationSpeed, setSimulationSpeed }) => {
-  const [fechaInicio, setFechaInicio] = useState<Date | null>(new Date());
-  const [internalSpeed, setInternalSpeed] = useState<number>(SIMULATION_SPEEDS.PAUSED);
+const ControlDeMandoCompleto: React.FC<Props> = ({
+  fechaInicio,
+  setFechaInicio,
+}) => {
+  const { velocidad, setVelocidad } = useSimulacion();
 
-  // ✅ Sync si viene velocidad externa
-  const currentSpeed = simulationSpeed !== undefined ? simulationSpeed : internalSpeed;
-  const updateSpeed = (speed: number) => {
-    if (setSimulationSpeed) {
-      setSimulationSpeed(speed); 
-    } else {
-      setInternalSpeed(speed);
-    }
+  const handleSetSpeed = (speed: number) => {
+    setVelocidad(speed);
   };
 
   const handleCancelSimulation = () => {
     console.log("Simulación cancelada");
-    updateSpeed(SIMULATION_SPEEDS.PAUSED);
+    setVelocidad(SIMULATION_SPEEDS.PAUSED);
   };
 
   return (
@@ -46,8 +44,8 @@ const ControlDeMandoCompleto: React.FC<Props> = ({ simulationSpeed, setSimulatio
 
       <div className="panel-section compact">
         <ReproduccionSimulacionControls
-          currentSpeed={currentSpeed}
-          onSetSpeed={updateSpeed}
+          currentSpeed={velocidad}
+          onSetSpeed={handleSetSpeed}
         />
       </div>
 
@@ -59,11 +57,11 @@ const ControlDeMandoCompleto: React.FC<Props> = ({ simulationSpeed, setSimulatio
       <div className="panel-section compact">
         <CancelarSimulacionButton onClick={handleCancelSimulation} />
       </div>
+
       <div className="panel-section lista-flota">
         <ListaFlotaYPedidos />
       </div>
     </div>
-    
   );
 };
 

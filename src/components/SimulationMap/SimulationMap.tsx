@@ -1,36 +1,29 @@
-// src/components/SimulationMap/SimulationMap.tsx
 import React, { useEffect, useState } from 'react';
 import './SimulationMap.css';
 import { GridMap } from '../GridMap/GridMap';
 import { GridCellData } from '../../types/map';
 import Truck from '../Truck/Truck';
-import { SIMULATION_SPEEDS } from '../ControlDeMando/ReproduccionSimulacionControls';
-import PedidoIcon from '../Pedido/Pedido'; // ✅ NUEVO COMPONENTE
+import PedidoMarker from '../Pedido/PedidoMarker';
+import { useSimulacion } from '../../context/SimulacionContext';
+import { useSimuladorPlanificacion } from '../../hooks/useSimuladorPlanificacion';
+import { useReproductorSimulacion } from '../../hooks/useReproductorSimulacion';
+import { useCallback } from 'react';
+interface Position { x: number; y: number; }
+interface Pedido { id: string; ubicacion: Position; }
+interface Flota { codigo: string; route: Position[]; pedido?: Pedido; }
 
-interface Position {
-  x: number;
-  y: number;
+interface EstadoMinuto {
+  minuto: string;
+  camiones: { codigo: string; posicion: Position; estado: string }[];
+  pedidosUbicacion: { idPedido: string; posicion: Position }[];
 }
 
-interface FlotaMock {
-  codigo: string;
-  route: Position[];
-  pedido: {
-    id: string;
-    ubicacion: Position;
-  };
+interface SimulationMapProps {
+  fechaInicio: Date | null;
 }
 
 const gridSizeX = 70;
 const gridSizeY = 50;
-
-const getColorForTruck = (codigo: string) => {
-  if (codigo.startsWith('TA')) return '#D300DE';
-  if (codigo.startsWith('TB')) return '#FFDE00';
-  if (codigo.startsWith('TC')) return '#00A35C';
-  if (codigo.startsWith('TD')) return '#BF360C';
-  return '#999999';
-};
 
 const createGrid = (): GridCellData[][] => {
   const grid: GridCellData[][] = [];
@@ -41,30 +34,48 @@ const createGrid = (): GridCellData[][] => {
     }
     grid.push(row);
   }
-
   grid[12][8] = { x: 12, y: 8, type: 'central' };
   grid[7][6] = { x: 7, y: 6, type: 'intermediate' };
-
   return grid;
 };
 
-interface SimulationMapProps {
-  simulationSpeed: number;
-}
-
-const SimulationMap: React.FC<SimulationMapProps> = ({ simulationSpeed }) => {
-  const [cellSize, setCellSize] = useState(13);
-  const [flota, setFlota] = useState<FlotaMock[]>([]);
+const SimulationMap: React.FC<SimulationMapProps> = ({ fechaInicio }) => {
+  const { velocidad } = useSimulacion();
   const gridData = createGrid();
 
-  useEffect(() => {
-    fetch('/mockFlota.json')
-      .then(res => res.json())
-      .then(data => setFlota(data.flota))
-      .catch(err => console.error('Error al cargar flota simulada:', err));
-  }, []);
+  const [historial, setHistorial] = useState<EstadoMinuto[]>([]);
+  const [flota, setFlota] = useState<Flota[]>([]);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
 
-const isPlaying = simulationSpeed === SIMULATION_SPEEDS.PLAY_NORMAL;
+ const handleNuevoHistorial = useCallback((nuevoHistorial: EstadoMinuto[]) => {
+  setHistorial(nuevoHistorial);
+}, []);
+
+useSimuladorPlanificacion(
+  fechaInicio,
+  velocidad > 0,
+  handleNuevoHistorial
+);
+
+  useReproductorSimulacion({
+  historial,
+  isRunning: velocidad > 0,
+  velocidadMs: velocidad,
+  onUpdate: (flotaNueva, pedidosNuevos) => {
+    setFlota(flotaNueva);
+    setPedidos(pedidosNuevos);
+  }
+});
+
+  const cellSize = 13;
+
+  const getColorForTruck = (codigo: string) => {
+    if (codigo.startsWith('TA')) return '#D300DE';
+    if (codigo.startsWith('TB')) return '#FFDE00';
+    if (codigo.startsWith('TC')) return '#00A35C';
+    if (codigo.startsWith('TD')) return '#BF360C';
+    return '#999999';
+  };
 
   return (
     <div className="app-container">
@@ -80,24 +91,26 @@ const isPlaying = simulationSpeed === SIMULATION_SPEEDS.PLAY_NORMAL;
           <GridMap gridData={gridData} cellSize={cellSize} />
 
           {flota.map((camion) => (
-             <React.Fragment key={camion.codigo}>
-              {isPlaying && (
-                <PedidoIcon
-                  position={camion.pedido.ubicacion}
-                  cellSize={cellSize}
-                  gridSizeY={gridSizeY}
-                />
-              )}
-
+            <React.Fragment key={camion.codigo}>
               <Truck
                 id={camion.codigo}
                 route={camion.route}
                 cellSize={cellSize}
-                color={getColorForTruck(camion.codigo)}
                 gridSizeY={gridSizeY}
-                isRunning={simulationSpeed === SIMULATION_SPEEDS.PLAY_NORMAL}
+                color={getColorForTruck(camion.codigo)}
+                isRunning={velocidad > 0}
               />
             </React.Fragment>
+          ))}
+
+          {pedidos.map((p) => (
+            <PedidoMarker
+              key={p.id}
+              x={p.ubicacion.x}
+              y={p.ubicacion.y}
+              cellSize={cellSize}
+              gridSizeY={gridSizeY}
+            />
           ))}
         </div>
       </div>
@@ -106,3 +119,4 @@ const isPlaying = simulationSpeed === SIMULATION_SPEEDS.PLAY_NORMAL;
 };
 
 export default SimulationMap;
+// SimulationMap.tsx
