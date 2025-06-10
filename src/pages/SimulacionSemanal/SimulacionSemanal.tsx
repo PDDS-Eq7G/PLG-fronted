@@ -7,7 +7,7 @@ import { SimulacionProvider } from '../../context/SimulacionContext';
 
 const SimulacionSemanal = () => {
   return (
-    <SimulacionProvider>
+    <SimulacionProvider tipoSimulacion="SEMANAL">
       <MainLayout>
         <div className="app-layout-container">
           <div className="main-page-content">
@@ -20,7 +20,7 @@ const SimulacionSemanal = () => {
             initialCollapsed={false}
             toggleBarTitle=""
           >
-            <ControlDeMandoCompleto tipoSimulacion="SEMANAL" />
+            <ControlDeMandoCompleto />
           </BarraLateral>
         </div>
       </MainLayout>

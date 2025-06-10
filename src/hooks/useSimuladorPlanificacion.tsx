@@ -1,6 +1,6 @@
 // src/hooks/useSimuladorPlanificacion.ts
 
-import { useEffect, useRef, useState } from 'react';
+/*import { useEffect, useRef, useState } from 'react';
 import API_URL from '../config';
 import { useSimulacion } from '../context/SimulacionContext';
 
@@ -8,8 +8,8 @@ export function useSimuladorPlanificacion(
   fechaInicio: Date | null,
   maxIteraciones: number | undefined,
 ) {
-  const { isSimulando, setHistorial } = useSimulacion();
-  const [nLlamada, setNLlamada] = useState(1);
+  const { isSimulando, setHistorial, nLlamada, setNLlamada } = useSimulacion();
+  //const [nLlamada, setNLlamada] = useState(1);
   const nLlamadaRef = useRef(nLlamada);
   const currentFetchRef = useRef<AbortController | null>(null);
   const executionIdRef = useRef(0);
@@ -64,16 +64,6 @@ export function useSimuladorPlanificacion(
             return;
           }
 
-          /*if (data && Array.isArray(data)) {
-            const dataFiltrada = data.filter((d) => d.minuto);
-            setHistorial((prevHistorial: any[]) => [...prevHistorial, ...dataFiltrada]);
-          }
-
-          if (maxIteraciones !== undefined && nLlamadaRef.current === maxIteraciones && data && Array.isArray(data)) {
-            const dataFiltrada = data.filter((d) => d.consumoTotal);
-            setHistorial((prevHistorial: any[]) => [...prevHistorial, ...dataFiltrada]);
-          }*/
-
           if (data && Array.isArray(data)) {
             // Filtrar datos de minuto por minuto
             const minuteData = data.filter((d) => 'minuto' in d);
@@ -121,4 +111,16 @@ export function useSimuladorPlanificacion(
   };
 
   return { reiniciar };
+}*/
+
+// src/hooks/useSimuladorPlanificacion.ts
+import { useSimulacion } from '../context/SimulacionContext';
+
+export function useSimuladorPlanificacion() {
+  const { resetSimulationState } = useSimulacion(); // Obtener la función de reseteo del contexto
+
+  // Este hook solo provee la función de reiniciar ahora.
+  // La lógica de las llamadas a la API y el control de nLlamada está en el contexto.
+
+  return { reiniciar: resetSimulationState };
 }

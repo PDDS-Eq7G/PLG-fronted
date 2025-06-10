@@ -1,6 +1,7 @@
 // src/context/SimulacionContext.tsx
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
+import API_URL from '../config';
 
 // Define el tipo para los datos de un minuto del historial
 export interface HistorialMinuto {
@@ -46,11 +47,15 @@ interface SimulacionContextType {
   setFinSimulacion: React.Dispatch<React.SetStateAction<boolean>>; // NEW: Setter for finSimulacion
   fechaInicio: Date | null;
   setFechaInicio: React.Dispatch<React.SetStateAction<Date | null>>;
+  maxIteraciones: number | undefined;
+  nLlamada: number;
+  setNLlamada: React.Dispatch<React.SetStateAction<number>>;
+  resetSimulationState: () => void;
 }
 
 const SimulacionContext = createContext<SimulacionContextType | undefined>(undefined);
 
-export const SimulacionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion: String }> = ({ children, tipoSimulacion }) => {
   const [velocidad, setVelocidad] = useState(0); // 0 means paused/stopped initially
   const [velocidadReal, setVelocidadReal] = useState(1000); // Default 1000ms (1 second per minute)
   const [isSimulando, setIsSimulando] = useState(false);
@@ -58,9 +63,128 @@ export const SimulacionProvider: React.FC<{ children: ReactNode }> = ({ children
   const [minutoActualIdx, setMinutoActualIdx] = useState(-1);
   const [finSimulacion, setFinSimulacion] = useState(false); // Initialize new state
   const [fechaInicio, setFechaInicio] = useState<Date | null>(new Date());
+  const maxIteraciones = tipoSimulacion === "SEMANAL" ? Number(169) : undefined;
+
+  const [nLlamada, setNLlamada] = useState(1);
+  const nLlamadaRef = useRef(nLlamada); // Para usar el valor más reciente en el closure
+  const currentFetchControllerRef = useRef<AbortController | null>(null); // Para abortar peticiones
+  const executionIdRef = useRef(0); // Para manejar reinicios de simulación
 
   const minSpeed = 100; // ms (Faster speed)
   const maxSpeed = 2000; // ms (Slower speed)
+
+  useEffect(() => {
+    nLlamadaRef.current = nLlamada;
+  }, [nLlamada]);
+
+  // NUEVO EFFECT para iniciar y mantener la simulación de backend
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | undefined;
+
+    // La simulación de backend solo se inicia si isSimulando es true y fechaInicio existe
+    if (!isSimulando || !fechaInicio) {
+        // Si la simulación se detiene o no hay fecha de inicio, aseguramos que cualquier llamada pendiente se aborte
+        currentFetchControllerRef.current?.abort();
+        currentFetchControllerRef.current = null;
+        return; // No hacer nada si no se está simulando
+    }
+
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const fechaSinZona = (fecha: Date) =>
+      `${fecha.getFullYear()}-${pad(fecha.getMonth() + 1)}-${pad(fecha.getDate())}T${pad(
+        fecha.getHours()
+      )}:${pad(fecha.getMinutes())}:${pad(fecha.getSeconds())}`;
+
+    const hacerLlamadaAPI = async (currentExecution: number) => {
+      // Abortar cualquier petición anterior para esta "ejecución"
+      currentFetchControllerRef.current?.abort();
+
+      const controller = new AbortController();
+      currentFetchControllerRef.current = controller;
+
+      const isLastIteration = maxIteraciones !== undefined && nLlamadaRef.current === maxIteraciones;
+
+      if (maxIteraciones !== undefined && nLlamadaRef.current > maxIteraciones) {
+        console.log('Simulación: Se alcanzó el máximo de iteraciones');
+        setIsSimulando(false); // Detener la simulación si se exceden las iteraciones
+        setVelocidad(0);
+        return;
+      }
+
+      const fechaInicioParam = fechaSinZona(fechaInicio);
+
+      console.log(`Simulación: Llamando a iteración ${nLlamadaRef.current}`);
+      try {
+        const res = await fetch(
+          `${API_URL}/api/planificador/semanal?fechaInicio=${encodeURIComponent(
+            fechaInicioParam
+          )}&nLlamada=${nLlamadaRef.current}`,
+          {
+            credentials: 'include',
+            signal: controller.signal,
+          }
+        );
+
+        // Si se abortó durante la espera, no procesar la respuesta
+        if (controller.signal.aborted || executionIdRef.current !== currentExecution) {
+            console.log('Simulación: Petición abortada o ejecución cambiada. No procesando respuesta.');
+            return;
+        }
+
+        const data = await res.json();
+
+        if (data && typeof data === 'object' && 'colapso' in data) {
+          console.log('Simulación: Colapso detectado. Deteniendo simulación.');
+          setIsSimulando(false); // Detener la simulación
+          setVelocidad(0);
+          // Aquí podrías agregar un estado para mostrar un modal de colapso si es necesario.
+          return;
+        }
+
+        if (data && Array.isArray(data)) {
+          const minuteData = data.filter((d) => 'minuto' in d);
+          let dataToAdd = [...minuteData];
+
+          if (isLastIteration) {
+            const consumoTotalData = data.filter((d) => 'consumoTotal' in d);
+            dataToAdd = [...dataToAdd, ...consumoTotalData];
+            // Aquí, si se añade consumoTotal, significa que la simulación ha terminado
+            setIsSimulando(false); // Detener la simulación
+            setVelocidad(0);
+          }
+
+          setHistorial((prevHistorial: HistorialItem[]) => [...prevHistorial, ...dataToAdd]);
+        }
+
+        setNLlamada((prev) => prev + 1);
+
+        // Si la simulación aún debe continuar, programar la próxima llamada
+        if (isSimulando && !controller.signal.aborted) { // isSimulando debe seguir siendo true aquí
+            timeoutId = setTimeout(() => hacerLlamadaAPI(currentExecution), 100); // Pequeño retardo entre llamadas
+        }
+
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          console.log('Simulación: Petición de iteración abortada (por reinicio o detención).');
+        } else {
+          console.error('Simulación: Error en la simulación:', error);
+          setIsSimulando(false); // Detener la simulación en caso de error
+          setVelocidad(0);
+        }
+      }
+    };
+
+    // Iniciar la primera llamada para esta "ejecución"
+    const currentExecution = executionIdRef.current;
+    hacerLlamadaAPI(currentExecution);
+
+    // Función de limpieza para este useEffect
+    return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        currentFetchControllerRef.current?.abort(); // Abortar cualquier fetch pendiente al desmontar/re-ejecutar el efecto
+        currentFetchControllerRef.current = null;
+    };
+  }, [isSimulando, fechaInicio, maxIteraciones, setHistorial, setNLlamada, setIsSimulando, setVelocidad]); // Dependencias
 
   // NEW: Effect to control the simulation clock (advancing minutoActualIdx)
   useEffect(() => {
@@ -90,18 +214,27 @@ export const SimulacionProvider: React.FC<{ children: ReactNode }> = ({ children
         clearInterval(interval);
       }
     };
-  }, [isSimulando, velocidad, historial.length, finSimulacion]); // Depend on relevant state changes
+  }, [isSimulando, velocidad, historial, finSimulacion]); // Depend on relevant state changes
 
   // Optional: Add a comprehensive reset function to the context
   // This can be called from any consumer (e.g., ControlDeMandoCompleto, SimulationMap)
   const resetSimulationState = useCallback(() => {
+    currentFetchControllerRef.current?.abort(); // Abortar cualquier petición en curso
+    currentFetchControllerRef.current = null;
+    executionIdRef.current += 1; // Incrementar para invalidar peticiones antiguas
+    
     setIsSimulando(false);
     setHistorial([]);
     setMinutoActualIdx(-1);
     setVelocidad(0); // Reset to paused default
     setVelocidadReal(1000); // Reset to default playback speed
+    setNLlamada(1); // Reiniciar nLlamada
     setFinSimulacion(false); // Crucial for new simulations
     setFechaInicio(new Date());
+
+    fetch(`${API_URL}/api/planificador/reiniciar`, { credentials: 'include' })
+      .then(() => console.log('Simulación reiniciada en backend'))
+      .catch((err) => console.error('Error al reiniciar backend:', err));
   }, []);
 
   return (
@@ -123,6 +256,10 @@ export const SimulacionProvider: React.FC<{ children: ReactNode }> = ({ children
         setFinSimulacion, // Provide the new setter
         fechaInicio,
         setFechaInicio,
+        maxIteraciones,
+        nLlamada,
+        setNLlamada,
+        resetSimulationState,
       }}
     >
       {children}

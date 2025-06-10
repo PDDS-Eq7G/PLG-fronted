@@ -11,7 +11,7 @@ import './ControlDeMando.css';
 import { useSimuladorPlanificacion } from '../../hooks/useSimuladorPlanificacion';
 import ModalResumenEjecucion from '../ModalResumenEjecucion/ModalResumenEjecucion';
 
-const ControlDeMandoCompleto: React.FC<{ tipoSimulacion: string }> = ({ tipoSimulacion }) => {
+const ControlDeMandoCompleto: React.FC = () => {
   const {
     velocidad,
     setVelocidad,
@@ -27,12 +27,14 @@ const ControlDeMandoCompleto: React.FC<{ tipoSimulacion: string }> = ({ tipoSimu
     setHistorial,
     fechaInicio,
     setFechaInicio,
+    maxIteraciones,
+    resetSimulationState
   } = useSimulacion();
 
   //const [fechaInicio, setFechaInicio] = React.useState<Date | null>(new Date());
   //const [consumoFinal, setConsumoFinal] = useState<number | null>(null);
-  const maxIteraciones = tipoSimulacion === "SEMANAL" ? Number(169) : undefined;
-  const { reiniciar } = useSimuladorPlanificacion(fechaInicio, maxIteraciones);
+  //const maxIteraciones = tipoSimulacion === "SEMANAL" ? Number(169) : undefined;
+  //const { reiniciar } = useSimuladorPlanificacion(fechaInicio, maxIteraciones);
 
   const tiempoSimulado = useMemo(() => {
     const itemActual = historial[minutoActualIdx];
@@ -92,12 +94,13 @@ const ControlDeMandoCompleto: React.FC<{ tipoSimulacion: string }> = ({ tipoSimu
   };
 
   const handleCancelSimulation = () => {
-    reiniciar();
+    resetSimulationState();
+    /*reiniciar();
     setIsSimulando(false);
     setVelocidad(0);
     setVelocidadReal(1000);
     setHistorial([]);
-    setMinutoActualIdx(-1);
+    setMinutoActualIdx(-1);*/
     console.log('Simulación cancelada');
     //setConsumoFinal(null);
   };
