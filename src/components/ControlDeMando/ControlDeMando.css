@@ -242,3 +242,7 @@
   width: 20px;
   height: 20px;
 }
+
+.panel-section strong {
+  margin-right: 0.5rem;
+}

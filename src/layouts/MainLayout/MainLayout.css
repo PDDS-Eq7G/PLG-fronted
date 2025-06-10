@@ -95,6 +95,7 @@
   justify-content: center;
   align-items: center;
   height: 100%;
+  width: 100%;
   overflow: auto;
   flex: 1;
   padding: 25px;

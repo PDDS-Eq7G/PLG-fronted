@@ -9,8 +9,8 @@ import {
 } from '../../icons/MediaIcons';
 import './ControlDeMando.css';
 
-export const SPEED_STEP_LARGE = 5;
-export const SPEED_STEP_SMALL = 2;
+export const SPEED_STEP_LARGE = 100;
+export const SPEED_STEP_SMALL = 50;
 
 interface ReproduccionSimulacionControlsProps {
   currentSpeed: number;
@@ -45,20 +45,20 @@ const ReproduccionSimulacionControls: React.FC<ReproduccionSimulacionControlsPro
     <div className="reproduccion-controls-container">
       <button
         className="playback-button"
-        onClick={() => onSetSpeed(clampSpeed((currentSpeed === 0 ? lastRealSpeed : currentSpeed) - SPEED_STEP_LARGE))}
+        onClick={() => onSetSpeed(clampSpeed((currentSpeed === 0 ? lastRealSpeed : currentSpeed) + SPEED_STEP_LARGE))}
         disabled={disabled}
-        aria-label="Disminuir velocidad en 5"
-        title="Disminuir velocidad en 5"
+        aria-label="Disminuir velocidad en 100"
+        title="Disminuir velocidad en 100"
       >
         <SeekToStartIcon className="playback-icon" />
       </button>
 
       <button
         className="playback-button"
-        onClick={() => onSetSpeed(clampSpeed((currentSpeed === 0 ? lastRealSpeed : currentSpeed) - SPEED_STEP_SMALL))}
+        onClick={() => onSetSpeed(clampSpeed((currentSpeed === 0 ? lastRealSpeed : currentSpeed) + SPEED_STEP_SMALL))}
         disabled={disabled}
-        aria-label="Disminuir velocidad en 2"
-        title="Disminuir velocidad en 2"
+        aria-label="Disminuir velocidad en 50"
+        title="Disminuir velocidad en 50"
       >
         <RewindStepIcon className="playback-icon" />
       </button>
@@ -75,20 +75,20 @@ const ReproduccionSimulacionControls: React.FC<ReproduccionSimulacionControlsPro
 
       <button
         className="playback-button"
-        onClick={() => onSetSpeed(clampSpeed((currentSpeed === 0 ? lastRealSpeed : currentSpeed) + SPEED_STEP_SMALL))}
+        onClick={() => onSetSpeed(clampSpeed((currentSpeed === 0 ? lastRealSpeed : currentSpeed) - SPEED_STEP_SMALL))}
         disabled={disabled}
-        aria-label="Aumentar velocidad en 2"
-        title="Aumentar velocidad en 2"
+        aria-label="Aumentar velocidad en 50"
+        title="Aumentar velocidad en 50"
       >
         <ForwardStepIcon className="playback-icon" />
       </button>
 
       <button
         className="playback-button"
-        onClick={() => onSetSpeed(clampSpeed((currentSpeed === 0 ? lastRealSpeed : currentSpeed) + SPEED_STEP_LARGE))}
+        onClick={() => onSetSpeed(clampSpeed((currentSpeed === 0 ? lastRealSpeed : currentSpeed) - SPEED_STEP_LARGE))}
         disabled={disabled}
-        aria-label="Aumentar velocidad en 5"
-        title="Aumentar velocidad en 5"
+        aria-label="Aumentar velocidad en 100"
+        title="Aumentar velocidad en 100"
       >
         <SeekToEndIcon className="playback-icon" />
       </button>

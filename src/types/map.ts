@@ -1,5 +1,5 @@
 
-export type CellType = 'empty' | 'central' | 'intermediate' | 'truck';
+export type CellType = 'empty' | 'central' | 'intermediate' | 'truck' | 'blocked' | 'order';
 
 export interface GridCellData {
 

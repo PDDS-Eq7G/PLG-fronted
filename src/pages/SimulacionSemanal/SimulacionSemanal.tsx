@@ -20,7 +20,7 @@ const SimulacionSemanal = () => {
             initialCollapsed={false}
             toggleBarTitle=""
           >
-            <ControlDeMandoCompleto />
+            <ControlDeMandoCompleto tipoSimulacion="SEMANAL" />
           </BarraLateral>
         </div>
       </MainLayout>

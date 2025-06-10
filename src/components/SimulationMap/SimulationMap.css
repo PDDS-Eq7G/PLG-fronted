@@ -9,6 +9,7 @@
 
 .grid-cell {
   /* quita width y height para que lo controle React inline styles */
+  box-sizing: border-box;
   border: 1px solid #ccc;
   font-size: 14px;
   display: flex;
@@ -94,6 +95,4 @@
   align-items: center;
 }
 
-.grid-map-inner {
-  position: relative;
-}
+
