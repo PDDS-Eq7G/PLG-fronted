@@ -3,12 +3,12 @@ import React, { useEffect, useState, useMemo } from 'react';
 import './SimulationMap.css';
 import { GridMap } from '../GridMap/GridMap';
 import { GridCellData } from '../../types/map';
-import { Truck as TruckComponent } from '../Truck/Truck'; // Renombrado para evitar conflicto de nombres
+import { Truck as TruckComponent } from '../Truck/Truck';
 import { useSimulacion } from '../../context/SimulacionContext';
 import { useConfig } from '../../context/ConfigContext';
-import { getTanques } from '../../api/index'; // getFlota ya no es necesario aquí
+import { getTanques } from '../../api/index';
 import ModalResumenEjecucion from '../ModalResumenEjecucion/ModalResumenEjecucion';
-
+import PedidoMarker from '../../icons/PedidoMarker';
 interface Position { x: number; y: number; }
 interface Truck { codigo: string; posicion: Position; }
 interface Pedido { idPedido: string; posicion: Position; }
@@ -23,6 +23,7 @@ const getColorForTruck = (codigo: string) => {
 };
 
 const SimulationMap: React.FC = () => {
+  const [almacenPos, setAlmacenPos] = useState<Position | null>(null);
   const [baseGrid, setBaseGrid] = useState<GridCellData[][]>([]);
   const [cellSize] = useState(15);
   const [gridSize, setGridSize] = useState({ ancho: 0, alto: 0 });
@@ -32,8 +33,9 @@ const SimulationMap: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [consumoFinal, setConsumoFinal] = useState<number | null>(null);
+  const [rutasPorCamion, setRutasPorCamion] = useState<Record<string, Position[]>>({});
+  const [pedidosEntregadosVisibles, setPedidosEntregadosVisibles] = useState<Pedido[]>([]);
 
-  // 1. Cargar la configuración inicial del mapa (almacén, tanques)
   useEffect(() => {
     const fetchInitialMap = async () => {
       if (!config) return;
@@ -42,81 +44,112 @@ const SimulationMap: React.FC = () => {
         const ancho = parseInt(config.ancho_ciudad, 10);
         const alto = parseInt(config.alto_ciudad, 10);
         const almacen = { x: parseInt(config.almacen_central_x, 10), y: parseInt(config.almacen_central_y, 10) };
-        
         const tanques: Position[] = (tanquesRes.data.tanquesIntermedios || []).map((t: any) => t.ubicacion);
-        
+
         const grid: GridCellData[][] = Array.from({ length: alto }, (_, y) =>
           Array.from({ length: ancho }, (_, x) => ({ x, y: alto - 1 - y, type: 'empty' }))
         );
-        
-        const invertY = (yCoord: number) => alto - 1 - yCoord;
 
-        grid[invertY(almacen.y)][almacen.x] = { ...grid[invertY(almacen.y)][almacen.x], type: 'central' };
+        const invertY = (y: number) => alto - 1 - y;
+        grid[invertY(almacen.y)][almacen.x].type = 'central';
         tanques.forEach(t => {
           if (t.x < ancho && t.y < alto) {
-            grid[invertY(t.y)][t.x] = { ...grid[invertY(t.y)][t.x], type: 'intermediate' };
+            grid[invertY(t.y)][t.x].type = 'intermediate';
           }
         });
 
         setBaseGrid(grid);
+        setAlmacenPos(almacen);
         setGridSize({ ancho, alto });
       } catch (err) {
         console.error('Error al cargar datos iniciales del mapa:', err);
       }
     };
 
-    if (!configLoading) {
-      fetchInitialMap();
-    }
+    if (!configLoading) fetchInitialMap();
   }, [config, configLoading]);
 
-  // 2. Obtener el estado actual de la simulación
   const minutoActualData = useMemo(() => {
-    if (minutoActualIdx === -1 || !historial[minutoActualIdx]) {
-      return null;
-    }
-    return historial[minutoActualIdx];
+    return minutoActualIdx === -1 ? null : historial[minutoActualIdx];
   }, [historial, minutoActualIdx]);
 
-  useEffect(() => {
-     if (historial.length > 0 && minutoActualIdx === historial.length - 1) {
-       const ultimoElemento = historial[historial.length - 1];
-       if (ultimoElemento && 'consumoTotal' in ultimoElemento) {
-       console.log('Final de simulación detectado. Mostrando modal.');
-         setConsumoFinal(ultimoElemento.consumoTotal);
-         setIsModalOpen(true);
-       }
-     }
-   }, [minutoActualIdx, historial]);
+  const getPixelCoords = (pos: Position) => ({
+    x: pos.x * cellSize + cellSize / 2,
+    y: (gridSize.alto - 1 - pos.y) * cellSize + cellSize / 2,
+  });
 
-  // 3. Generar el grid y la flota para el minuto actual
+  useEffect(() => {
+    if (historial.length > 0 && minutoActualIdx === historial.length - 1) {
+      const ultimo = historial[historial.length - 1];
+      if (ultimo && 'consumoTotal' in ultimo) {
+        setConsumoFinal(ultimo.consumoTotal);
+        setIsModalOpen(true);
+      }
+    }
+  }, [minutoActualIdx, historial]);
+
+  useEffect(() => {
+    if (!minutoActualData || !('camiones' in minutoActualData)) return;
+
+    setRutasPorCamion((prev) => {
+      const nuevas = { ...prev };
+      minutoActualData.camiones.forEach(({ codigo, posicion, estado }) => {
+        const prevRuta = nuevas[codigo] || [];
+        if (estado === 'DESCARGANDO' || estado === 'FINALIZADO' || estado === 'TERMINADO') {
+          nuevas[codigo] = [];
+        } else {
+          const ultima = prevRuta[prevRuta.length - 1];
+          if (!ultima || ultima.x !== posicion.x || ultima.y !== posicion.y) {
+            nuevas[codigo] = [...prevRuta, posicion];
+          }
+        }
+      });
+      return nuevas;
+    });
+  }, [minutoActualIdx, minutoActualData]);
+
+  useEffect(() => {
+    if (!minutoActualData || !('minuto' in minutoActualData)) return;
+    const pedidosActuales = minutoActualData.pedidosUbicacion ?? [];
+
+    setPedidosEntregadosVisibles((prev) => {
+      const actualesIds = new Set(pedidosActuales.map(p => p.idPedido));
+      const persistentes = prev.filter(p => !actualesIds.has(p.idPedido));
+
+      const prevIdx = Math.max(minutoActualIdx - 1, 0);
+      const prevData = historial[prevIdx];
+      if (!prevData || !('minuto' in prevData)) return persistentes;
+
+      const prevPedidos = prevData.pedidosUbicacion ?? [];
+      const desaparecidos = prevPedidos.filter(p => !actualesIds.has(p.idPedido));
+
+      return [...persistentes, ...desaparecidos];
+    });
+  }, [minutoActualIdx, minutoActualData]);
+
   const { currentGrid, currentFlota } = useMemo(() => {
-    if (!minutoActualData) {
+    if (!minutoActualData || !('minuto' in minutoActualData)) {
       return { currentGrid: baseGrid, currentFlota: [] };
     }
-    
+
     const newGrid = baseGrid.map(row => row.map(cell => ({ ...cell })));
     const invertY = (y: number) => gridSize.alto - 1 - y;
 
-    let flota: Truck[] = [];
+    const pedidos = minutoActualData.pedidosUbicacion ?? [];
+    const nodosBloqueados = minutoActualData.nodosBloqueados ?? [];
+    const flota = minutoActualData.camiones ?? [];
 
-    if ('minuto' in minutoActualData) {
-      const pedidos: Pedido[] = minutoActualData.pedidosUbicacion || [];
-      const nodosBloqueados: NodoBloqueado[] = minutoActualData.nodosBloqueados || [];
-      flota = minutoActualData.camiones || [];
+    pedidos.forEach(p => {
+      if (p.posicion.x < gridSize.ancho && p.posicion.y < gridSize.alto) {
+        newGrid[invertY(p.posicion.y)][p.posicion.x].type = 'order';
+      }
+    });
 
-      pedidos.forEach(p => {
-        if (p.posicion.x < gridSize.ancho && p.posicion.y < gridSize.alto) {
-          newGrid[invertY(p.posicion.y)][p.posicion.x].type = 'order';
-        }
-      });
-
-      nodosBloqueados.forEach(n => {
-        if (n.posicion.x < gridSize.ancho && n.posicion.y < gridSize.alto) {
-          newGrid[invertY(n.posicion.y)][n.posicion.x].type = 'blocked';
-        }
-      });
-    }
+    nodosBloqueados.forEach(n => {
+      if (n.posicion.x < gridSize.ancho && n.posicion.y < gridSize.alto) {
+        newGrid[invertY(n.posicion.y)][n.posicion.x].type = 'blocked';
+      }
+    });
 
     return { currentGrid: newGrid, currentFlota: flota };
   }, [minutoActualData, baseGrid, gridSize]);
@@ -124,7 +157,7 @@ const SimulationMap: React.FC = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setConsumoFinal(null);
-  }
+  };
 
   return (
     <div className="app-container">
@@ -135,10 +168,47 @@ const SimulationMap: React.FC = () => {
             width: `${cellSize * gridSize.ancho}px`,
             height: `${cellSize * gridSize.alto}px`,
             position: 'relative',
-            display: 'flex'
+            display: 'flex',
           }}
         >
           <GridMap gridData={currentGrid} cellSize={cellSize} />
+
+          {Object.entries(rutasPorCamion).map(([codigo, ruta]) => (
+            <svg
+              key={`ruta-${codigo}`}
+              style={{ position: 'absolute', pointerEvents: 'none' }}
+              width={cellSize * gridSize.ancho}
+              height={cellSize * gridSize.alto}
+            >
+              {ruta.slice(1).map((pos, i) => {
+                const prev = getPixelCoords(ruta[i]);
+                const curr = getPixelCoords(pos);
+                return (
+                  <line
+                    key={`${codigo}-segmento-${i}`}
+                    x1={prev.x}
+                    y1={prev.y}
+                    x2={curr.x}
+                    y2={curr.y}
+                    stroke={getColorForTruck(codigo)}
+                    strokeWidth="2"
+                  />
+                );
+              })}
+            </svg>
+          ))}
+
+          {pedidosEntregadosVisibles.map((p) => (
+            <PedidoMarker
+              key={`entregado-${p.idPedido}`}
+              x={p.posicion.x}
+              y={p.posicion.y}
+              cellSize={cellSize}
+              gridSizeY={gridSize.alto}
+              color="#999999"
+              opacity={0.4}
+            />
+          ))}
 
           {currentFlota.map((camion) => (
             <TruckComponent
@@ -154,12 +224,12 @@ const SimulationMap: React.FC = () => {
 
         <ModalResumenEjecucion isOpen={isModalOpen} onClose={handleCloseModal}>
           <>
-              <p>Simulación finalizada</p>
-              {consumoFinal !== null && (
-                  <div style={{ marginTop: '10px', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                      <p>Consumo Total: {consumoFinal.toFixed(3)} galones</p>
-                  </div>
-              )}
+            <p>Simulación finalizada</p>
+            {consumoFinal !== null && (
+              <div style={{ marginTop: '10px', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                <p>Consumo Total: {consumoFinal.toFixed(3)} galones</p>
+              </div>
+            )}
           </>
         </ModalResumenEjecucion>
       </div>
