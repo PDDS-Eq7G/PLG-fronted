@@ -101,10 +101,10 @@
 
 /* Ajustes para el .control-de-mando-panel cuando está dentro */
 .sidebar-right-main-content .control-de-mando-panel {
-  margin: 0;
+  margin: 0 0 12px 0;
   width: 100%;
   max-width: 100%;
-  height: 100%;
+  height: auto; /* allow additional components below */
   box-shadow: none;
   border-radius: 0;
   display: flex;

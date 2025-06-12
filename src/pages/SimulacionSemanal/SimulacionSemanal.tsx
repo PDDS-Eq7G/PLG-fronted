@@ -3,6 +3,7 @@ import MainLayout from '../../layouts/MainLayout/MainLayout';
 import SimulationMap from '../../components/SimulationMap/SimulationMap';
 import BarraLateral from '../../components/BarraLateral/BarraLateral';
 import ControlDeMandoCompleto from '../../components/ControlDeMando/ControlDeMandoCompleto';
+import ListaFlotaYPedidos from '../../components/ListaFlotaYPedidos/ListaFlotaYPedidos';
 import { SimulacionProvider } from '../../context/SimulacionContext';
 
 const SimulacionSemanal = () => {
@@ -21,6 +22,7 @@ const SimulacionSemanal = () => {
             toggleBarTitle=""
           >
             <ControlDeMandoCompleto />
+            <ListaFlotaYPedidos />
           </BarraLateral>
         </div>
       </MainLayout>
