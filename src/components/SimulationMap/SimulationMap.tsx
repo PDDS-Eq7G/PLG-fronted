@@ -1,5 +1,5 @@
 // src/components/SimulationMap/SimulationMap.tsx
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import './SimulationMap.css';
 import { GridMap } from '../GridMap/GridMap';
 import { GridCellData } from '../../types/map';
@@ -27,6 +27,9 @@ const SimulationMap: React.FC = () => {
   const [baseGrid, setBaseGrid] = useState<GridCellData[][]>([]);
   const [cellSize] = useState(15);
   const [gridSize, setGridSize] = useState({ ancho: 0, alto: 0 });
+  const [userScale, setUserScale] = useState(1);
+  const [autoScale, setAutoScale] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const { historial, minutoActualIdx, velocidad } = useSimulacion();
   const { config, loading: configLoading } = useConfig();
@@ -35,6 +38,26 @@ const SimulationMap: React.FC = () => {
   const [consumoFinal, setConsumoFinal] = useState<number | null>(null);
   const [rutasPorCamion, setRutasPorCamion] = useState<Record<string, Position[]>>({});
   const [pedidosEntregadosVisibles, setPedidosEntregadosVisibles] = useState<Pedido[]>([]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const updateScale = () => {
+      if (!containerRef.current) return;
+      const w = containerRef.current.offsetWidth;
+      const h = containerRef.current.offsetHeight;
+      if (gridSize.ancho === 0 || gridSize.alto === 0) return;
+      const mapW = cellSize * gridSize.ancho;
+      const mapH = cellSize * gridSize.alto;
+      const scaleW = w / mapW;
+      const scaleH = h / mapH;
+      const newScale = Math.min(scaleW, scaleH, 3);
+      setAutoScale(newScale);
+    };
+    updateScale();
+    const ro = new ResizeObserver(updateScale);
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, [gridSize, cellSize]);
 
   useEffect(() => {
     const fetchInitialMap = async () => {
@@ -161,7 +184,7 @@ const SimulationMap: React.FC = () => {
 
   return (
     <div className="app-container">
-      <div className="grid-map-frame">
+      <div className="grid-map-frame" ref={containerRef}>
         <div
           className="grid-map-inner"
           style={{
@@ -169,6 +192,8 @@ const SimulationMap: React.FC = () => {
             height: `${cellSize * gridSize.alto}px`,
             position: 'relative',
             display: 'flex',
+            transform: `scale(${Math.min(userScale * autoScale, 3)})`,
+            transformOrigin: 'top left',
           }}
         >
           <GridMap gridData={currentGrid} cellSize={cellSize} />
@@ -220,6 +245,11 @@ const SimulationMap: React.FC = () => {
               gridSizeY={gridSize.alto}
             />
           ))}
+        </div>
+        <div className="zoom-controls">
+          <button className="zoom-button" onClick={() => setUserScale(s => Math.min(s + 0.1, 3))}>+</button>
+          <span className="zoom-label">{Math.round(userScale * autoScale * 100)}%</span>
+          <button className="zoom-button" onClick={() => setUserScale(s => Math.max(0.5, s - 0.1))}>-</button>
         </div>
 
         <ModalResumenEjecucion isOpen={isModalOpen} onClose={handleCloseModal}>

@@ -18,7 +18,7 @@
 
 .logo-container {
   padding: 25px 20px;
-  background-color: #3498db; /* Azul similar al botón de login */
+  background-color: #7091E6;
   text-align: center;
   color: white;
 }
@@ -51,7 +51,7 @@
 
 .menu li:hover {
   background-color: #e9ecef; /* Gris muy claro al hover */
-  color: #3498db; /* Azul al hover */
+  color: #7091E6;
   font-weight: bold;
 }
 

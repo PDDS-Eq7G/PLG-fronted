@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100vh;
   border-left: 1px solid #d1d1d1;
-  background-color: #FBFBFB; /* Fondo de la toggle-bar se extiende aquí */
+  background-color: #FFFFFF;
   /* width y transition se establecen inline desde el componente JS */
   overflow: hidden; 
   flex-shrink: 0;
@@ -12,7 +12,7 @@
 
 .sidebar-right-toggle-bar {
   height: 50px;
-  background-color: #FBFBFB;
+  background-color: #7091E6;
   display: flex;
   align-items: center;
   padding: 0 12px;
@@ -36,7 +36,7 @@
 .sidebar-right-toggle-text {
   font-size: 0.9em;
   font-weight: 600;
-  color: #333;
+  color: #EDE8F5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -51,7 +51,7 @@
 }
 
 .sidebar-right-toggle-icon {
-  stroke: #4a4a4a;
+  stroke: #EDE8F5;
   margin-left: 8px; /* Espacio por defecto */
 }
 .collapsible-sidebar-right.collapsed .sidebar-right-toggle-icon {

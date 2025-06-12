@@ -10,6 +10,7 @@ interface BarraLateralProps {
   initialCollapsed?: boolean;
   toggleBarTitle?: string; // Título opcional para la barra de despliegue
   animationDurationMs?: number; // Duración para la animación de ancho y la base de la de contenido
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 const BarraLateral: React.FC<BarraLateralProps> = ({
@@ -19,11 +20,14 @@ const BarraLateral: React.FC<BarraLateralProps> = ({
   initialCollapsed = false,
   toggleBarTitle = "",
   animationDurationMs = 500, // 0.5s
+  onCollapsedChange,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
 
   const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    onCollapsedChange && onCollapsedChange(newState);
   };
 
   const arrowShouldPointLeft = isCollapsed;
