@@ -20,6 +20,7 @@ const SimulacionSemanal = () => {
             collapsedWidth="55px"
             initialCollapsed={false}
             toggleBarTitle=""
+            animationDurationMs={300}
           >
             <ControlDeMandoCompleto />
             <ListaFlotaYPedidos />
