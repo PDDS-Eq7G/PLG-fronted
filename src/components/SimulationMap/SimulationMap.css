@@ -94,6 +94,11 @@
   justify-content: center;
   align-items: center;
   position: relative;
+  cursor: grab;
+}
+
+.grid-map-frame.dragging {
+  cursor: grabbing;
 }
 
 
