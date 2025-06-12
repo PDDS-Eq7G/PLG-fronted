@@ -30,6 +30,9 @@ const SimulationMap: React.FC = () => {
   const [userScale, setUserScale] = useState(1);
   const [autoScale, setAutoScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isPanning = useRef(false);
+  const startPoint = useRef<Position>({ x: 0, y: 0 });
+  const startScroll = useRef<{ left: number; top: number }>({ left: 0, top: 0 });
   
   const { historial, minutoActualIdx, velocidad } = useSimulacion();
   const { config, loading: configLoading } = useConfig();
@@ -38,6 +41,8 @@ const SimulationMap: React.FC = () => {
   const [consumoFinal, setConsumoFinal] = useState<number | null>(null);
   const [rutasPorCamion, setRutasPorCamion] = useState<Record<string, Position[]>>({});
   const [pedidosEntregadosVisibles, setPedidosEntregadosVisibles] = useState<Pedido[]>([]);
+
+  const scale = Math.min(userScale * autoScale, 3);
 
   useEffect(() => {
     if (minutoActualIdx === -1) {
@@ -189,20 +194,60 @@ const SimulationMap: React.FC = () => {
     setConsumoFinal(null);
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    isPanning.current = true;
+    startPoint.current = { x: e.clientX, y: e.clientY };
+    startScroll.current = {
+      left: containerRef.current.scrollLeft,
+      top: containerRef.current.scrollTop,
+    };
+    containerRef.current.classList.add('dragging');
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isPanning.current || !containerRef.current) return;
+    const dx = e.clientX - startPoint.current.x;
+    const dy = e.clientY - startPoint.current.y;
+    containerRef.current.scrollLeft = startScroll.current.left - dx;
+    containerRef.current.scrollTop = startScroll.current.top - dy;
+  };
+
+  const stopPanning = () => {
+    isPanning.current = false;
+    if (containerRef.current) {
+      containerRef.current.classList.remove('dragging');
+    }
+  };
+
   return (
     <div className="app-container">
-      <div className="grid-map-frame" ref={containerRef}>
+      <div
+        className="grid-map-frame"
+        ref={containerRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={stopPanning}
+        onMouseLeave={stopPanning}
+      >
         <div
-          className="grid-map-inner"
           style={{
-            width: `${cellSize * gridSize.ancho}px`,
-            height: `${cellSize * gridSize.alto}px`,
+            width: `${cellSize * gridSize.ancho * scale}px`,
+            height: `${cellSize * gridSize.alto * scale}px`,
             position: 'relative',
-            display: 'flex',
-            transform: `scale(${Math.min(userScale * autoScale, 3)})`,
-            transformOrigin: 'top left',
           }}
         >
+          <div
+            className="grid-map-inner"
+            style={{
+              width: `${cellSize * gridSize.ancho}px`,
+              height: `${cellSize * gridSize.alto}px`,
+              position: 'relative',
+              display: 'flex',
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
+            }}
+          >
           <GridMap gridData={currentGrid} cellSize={cellSize} />
 
           {Object.entries(rutasPorCamion).map(([codigo, ruta]) => (
@@ -269,6 +314,7 @@ const SimulationMap: React.FC = () => {
             )}
           </>
         </ModalResumenEjecucion>
+        </div>
       </div>
     </div>
   );
