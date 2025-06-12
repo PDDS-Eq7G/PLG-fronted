@@ -40,14 +40,14 @@ const SimulationMap: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [consumoFinal, setConsumoFinal] = useState<number | null>(null);
   const [rutasPorCamion, setRutasPorCamion] = useState<Record<string, Position[]>>({});
-  const [pedidosEntregadosVisibles, setPedidosEntregadosVisibles] = useState<Pedido[]>([]);
+  const [pedidosEntregadosVisibles, setPedidosEntregadosVisibles] = useState<Record<string, PedidoConTiempo>>({});
 
   const scale = Math.min(userScale * autoScale, 3);
 
   useEffect(() => {
     if (minutoActualIdx === -1) {
       setRutasPorCamion({});
-      setPedidosEntregadosVisibles([]);
+      setPedidosEntregadosVisibles({});
     }
   }, [minutoActualIdx]);
 
@@ -130,7 +130,8 @@ const SimulationMap: React.FC = () => {
       const nuevas = { ...prev };
       minutoActualData.camiones.forEach(({ codigo, posicion, estado }) => {
         const prevRuta = nuevas[codigo] || [];
-        if (estado === 'DESCARGANDO' || estado === 'FINALIZADO' || estado === 'TERMINADO') {
+        if (estado === 'DESCARGANDO' || estado === 'FINALIZADO' || estado === 'TERMINADO' 
+          || estado === 'AVERIADO' || (estado === 'DISPONIBLE' && posicion.x === almacenPos?.x && posicion.y === almacenPos?.y)) {
           nuevas[codigo] = [];
         } else {
           const ultima = prevRuta[prevRuta.length - 1];
@@ -143,22 +144,46 @@ const SimulationMap: React.FC = () => {
     });
   }, [minutoActualIdx, minutoActualData]);
 
+  type PedidoConTiempo = Pedido & { minutoDesaparicion: string };
+
   useEffect(() => {
     if (!minutoActualData || !('minuto' in minutoActualData)) return;
+
     const pedidosActuales = minutoActualData.pedidosUbicacion ?? [];
+    const minutoActualTimestamp = new Date(minutoActualData.minuto).getTime();
 
     setPedidosEntregadosVisibles((prev) => {
       const actualesIds = new Set(pedidosActuales.map(p => p.idPedido));
-      const persistentes = prev.filter(p => !actualesIds.has(p.idPedido));
+      const nuevos: Record<string, PedidoConTiempo> = {};
 
+      // Mantener los pedidos que aún no se eliminan por tiempo
+      Object.entries(prev).forEach(([id, pedido]) => {
+        const desaparicionTimestamp = new Date(pedido.minutoDesaparicion).getTime();
+        const hanPasado30Min = minutoActualTimestamp - desaparicionTimestamp > 30 * 60 * 1000;
+
+        if (!hanPasado30Min) {
+          nuevos[id] = pedido;
+        }
+      });
+
+      // Agregar los pedidos que desaparecieron en este minuto
       const prevIdx = Math.max(minutoActualIdx - 1, 0);
       const prevData = historial[prevIdx];
-      if (!prevData || !('minuto' in prevData)) return persistentes;
+      if (prevData && 'minuto' in prevData) {
+        const prevPedidos = prevData.pedidosUbicacion ?? [];
+        const prevPedidosMap = new Map(prevPedidos.map(p => [p.idPedido, p]));
 
-      const prevPedidos = prevData.pedidosUbicacion ?? [];
-      const desaparecidos = prevPedidos.filter(p => !actualesIds.has(p.idPedido));
+        prevPedidos.forEach(p => {
+          if (!actualesIds.has(p.idPedido)) {
+            nuevos[p.idPedido] = {
+              ...p,
+              minutoDesaparicion: minutoActualData.minuto,
+            };
+          }
+        });
+      }
 
-      return [...persistentes, ...desaparecidos];
+      return nuevos;
     });
   }, [minutoActualIdx, minutoActualData]);
 
@@ -277,7 +302,7 @@ const SimulationMap: React.FC = () => {
             </svg>
           ))}
 
-          {pedidosEntregadosVisibles.map((p) => (
+          {Object.values(pedidosEntregadosVisibles).map((p) => (
             <PedidoMarker
               key={`entregado-${p.idPedido}`}
               x={p.posicion.x}
