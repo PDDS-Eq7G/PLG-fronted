@@ -21,7 +21,7 @@ const Dashboard = () => {
             </li>
         </ol>        
         <p>Esta herramienta representa un paso clave hacia una logística inteligente, con decisiones basadas en datos, eficiencia en la distribución y satisfacción del cliente.</p>
-        <p class="signature">¡Gracias por ser parte de esta transformación!</p>
+        <p className="signature">¡Gracias por ser parte de esta transformación!</p>
       </div>
     </MainLayout>
   );
