@@ -90,15 +90,26 @@
   box-shadow: 0 0 10px rgba(0,0,0,0.2);
   border-radius: 8px;
   background: #fff;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
   position: relative;
   cursor: grab;
 }
 
 .grid-map-frame.dragging {
   cursor: grabbing;
+}
+
+.app-container {
+  width: 100%;
+  height: 100%;
+}
+
+.route-trail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 1;
 }
 
 

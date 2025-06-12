@@ -209,6 +209,7 @@ const SimulationMap: React.FC = () => {
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!isPanning.current || !containerRef.current) return;
+    e.preventDefault();
     const dx = e.clientX - startPoint.current.x;
     const dy = e.clientY - startPoint.current.y;
     containerRef.current.scrollLeft = startScroll.current.left - dx;
@@ -244,7 +245,6 @@ const SimulationMap: React.FC = () => {
               width: `${cellSize * gridSize.ancho}px`,
               height: `${cellSize * gridSize.alto}px`,
               position: 'relative',
-              display: 'flex',
               transform: `scale(${scale})`,
               transformOrigin: 'top left',
             }}
@@ -254,7 +254,7 @@ const SimulationMap: React.FC = () => {
           {Object.entries(rutasPorCamion).map(([codigo, ruta]) => (
             <svg
               key={`ruta-${codigo}`}
-              style={{ position: 'absolute', pointerEvents: 'none' }}
+              className="route-trail"
               width={cellSize * gridSize.ancho}
               height={cellSize * gridSize.alto}
             >
@@ -270,6 +270,7 @@ const SimulationMap: React.FC = () => {
                     y2={curr.y}
                     stroke={getColorForTruck(codigo)}
                     strokeWidth="2"
+                    strokeLinecap="round"
                   />
                 );
               })}
