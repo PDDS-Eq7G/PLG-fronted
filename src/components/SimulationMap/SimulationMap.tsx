@@ -40,6 +40,13 @@ const SimulationMap: React.FC = () => {
   const [pedidosEntregadosVisibles, setPedidosEntregadosVisibles] = useState<Pedido[]>([]);
 
   useEffect(() => {
+    if (minutoActualIdx === -1) {
+      setRutasPorCamion({});
+      setPedidosEntregadosVisibles([]);
+    }
+  }, [minutoActualIdx]);
+
+  useEffect(() => {
     if (!containerRef.current) return;
     const updateScale = () => {
       if (!containerRef.current) return;
