@@ -203,10 +203,13 @@ const SimulationMap: React.FC = () => {
       top: containerRef.current.scrollTop,
     };
     containerRef.current.classList.add('dragging');
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', stopPanning);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: MouseEvent) => {
     if (!isPanning.current || !containerRef.current) return;
+    e.preventDefault();
     const dx = e.clientX - startPoint.current.x;
     const dy = e.clientY - startPoint.current.y;
     containerRef.current.scrollLeft = startScroll.current.left - dx;
@@ -215,6 +218,8 @@ const SimulationMap: React.FC = () => {
 
   const stopPanning = () => {
     isPanning.current = false;
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', stopPanning);
     if (containerRef.current) {
       containerRef.current.classList.remove('dragging');
     }
@@ -226,9 +231,6 @@ const SimulationMap: React.FC = () => {
         className="grid-map-frame"
         ref={containerRef}
         onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopPanning}
-        onMouseLeave={stopPanning}
       >
         <div
           style={{
@@ -243,7 +245,6 @@ const SimulationMap: React.FC = () => {
               width: `${cellSize * gridSize.ancho}px`,
               height: `${cellSize * gridSize.alto}px`,
               position: 'relative',
-              display: 'flex',
               transform: `scale(${scale})`,
               transformOrigin: 'top left',
             }}
@@ -253,7 +254,7 @@ const SimulationMap: React.FC = () => {
           {Object.entries(rutasPorCamion).map(([codigo, ruta]) => (
             <svg
               key={`ruta-${codigo}`}
-              style={{ position: 'absolute', pointerEvents: 'none' }}
+              className="route-trail"
               width={cellSize * gridSize.ancho}
               height={cellSize * gridSize.alto}
             >
@@ -269,6 +270,7 @@ const SimulationMap: React.FC = () => {
                     y2={curr.y}
                     stroke={getColorForTruck(codigo)}
                     strokeWidth="2"
+                    strokeLinecap="round"
                   />
                 );
               })}
