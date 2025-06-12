@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { useSimulacion } from "../../context/SimulacionContext";
 import "./ListaFlotaYPedidos.css";
 
 export enum TabType {
@@ -15,6 +16,7 @@ interface FlotaData {
 interface PedidosData {
   codigo: string;
   posicion: string;
+  cantidad: string;
   fecha: string;
 }
 
@@ -26,7 +28,7 @@ interface ListaFlotaYPedidosProps {
   disabled?: boolean;
 }
 
-const defaultFlotaData: FlotaData[] = [
+/*const defaultFlotaData: FlotaData[] = [
   { codigo: "TA01", posicion: "(16, 10)", capacidad: "10/25 (40%)" },
   { codigo: "TA02", posicion: "(24, 17)", capacidad: "11/25 (44%)" },
   { codigo: "TA03", posicion: "(7, 22)", capacidad: "3/25 (12%)" },
@@ -59,11 +61,9 @@ const defaultPedidosData: PedidosData[] = [
   { codigo: "P013", posicion: "(5, 23)", fecha: "09/05 16:54" },
   { codigo: "P014", posicion: "(44, 3)", fecha: "09/05 17:18" },
   { codigo: "P015", posicion: "(44, 3)", fecha: "09/05 18:31" },
-];
+];*/
 
 const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
-  flotaData = defaultFlotaData,
-  pedidosData = defaultPedidosData,
   onTabChange,
   defaultTab = TabType.FLOTA,
   disabled = false,
@@ -72,6 +72,49 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
   const [searchText, setSearchText] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const { historial, minutoActualIdx } = useSimulacion();
+
+  const minutoActual = useMemo(() => {
+    const item = historial[minutoActualIdx];
+    if (item && "minuto" in item) return item;
+    return null;
+  }, [historial, minutoActualIdx]);
+
+  const flotaData: FlotaData[] = useMemo(() => {
+    if (!minutoActual) return [];
+    return minutoActual.camiones.map((camion) => ({
+      codigo: camion.codigo,
+      posicion: `(${camion.posicion.x}, ${camion.posicion.y})`,
+      capacidad: `${camion.cargaActual}/${camion.capacidadMaxima} galones (${Math.round((camion.cargaActual / camion.capacidadMaxima) * 100)}%)`,
+    }));
+  }, [minutoActual]);
+
+  const pedidosData: PedidosData[] = useMemo(() => {
+    if (!minutoActual) return [];
+    return minutoActual.pedidosUbicacion.map((pedido) => {
+      const pedidoData = minutoActual.pedidos.find(
+        (pu) => pu.idPedido === pedido.idPedido
+      );
+      
+      const fechaLlegada = pedidoData?.fechaLlegada;
+
+      const cantidadPorEntregar = pedidoData?.cantidadPorEntregar;
+      const cantidadTotal = pedidoData?.cantidadTotal;
+
+      return {
+        codigo: "P"+String(pedido.idPedido).padStart(5, '0'),
+        posicion: `(${pedido.posicion.x}, ${pedido.posicion.y})`,
+        cantidad: `${cantidadPorEntregar}/${cantidadTotal} m³`,
+        fecha: fechaLlegada ? new Date(fechaLlegada).toLocaleString("es-PE", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        }) : "N/A",
+      };
+    });
+  }, [minutoActual]);
 
   const handleTabClick = (tab: TabType) => {
     if (disabled) return;
@@ -139,6 +182,7 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
           <tr>
             <th>Código</th>
             <th>Posición</th>
+            <th>Cantidad por entregar</th>
             <th>Fecha</th>
           </tr>
         </thead>
@@ -147,6 +191,7 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
             <tr key={index}>
               <td>{item.codigo}</td>
               <td>{item.posicion}</td>
+              <td>{item.cantidad}</td>
               <td>{item.fecha}</td>
             </tr>
           ))}

@@ -1,7 +1,7 @@
 .collapsible-sidebar-right {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   border-left: 1px solid #d1d1d1;
   background-color: #FFFFFF;
   /* width y transition se establecen inline desde el componente JS */
@@ -51,7 +51,7 @@
 }
 
 .sidebar-right-toggle-icon {
-  stroke: #EDE8F5;
+  stroke: #FBFBFB;
   margin-left: 8px; /* Espacio por defecto */
 }
 .collapsible-sidebar-right.collapsed .sidebar-right-toggle-icon {

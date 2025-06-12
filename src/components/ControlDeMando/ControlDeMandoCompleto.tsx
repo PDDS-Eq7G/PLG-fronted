@@ -28,7 +28,8 @@ const ControlDeMandoCompleto: React.FC = () => {
     fechaInicio,
     setFechaInicio,
     maxIteraciones,
-    resetSimulationState
+    resetSimulationState,
+    tipoSimulacion,
   } = useSimulacion();
 
   //const [fechaInicio, setFechaInicio] = React.useState<Date | null>(new Date());
@@ -122,7 +123,8 @@ const ControlDeMandoCompleto: React.FC = () => {
       </div>
       <div className="panel-section file-upload-buttons-container">
         <CargarPedidos />
-        <CargarAverias />
+        {tipoSimulacion === 'SEMANAL' && 
+          <CargarAverias />}
       </div>
       <div className="panel-section">
         <CancelarSimulacionButton onClick={handleCancelSimulation} />

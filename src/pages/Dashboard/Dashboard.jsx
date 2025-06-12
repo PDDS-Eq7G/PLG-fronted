@@ -14,7 +14,7 @@ const Dashboard = () => {
                 <b>Registro de Pedidos:</b> Permite ingresar solicitudes de forma segura, asegurando el cumplimiento de las condiciones mínimas de atención, como el aviso con al menos 4 horas de anticipación.
             </li>
             <li>
-                <b>Planificación y Simulación de Rutas:</b> Asigna las rutas óptimas a los camiones cisterna considerando capacidades, distancias, consumo de combustible y disponibilidad de flota. Además, permite simular escenarios operativos, tanto semanales como de alta demanda, para prever posibles cuellos de botella.
+                <b>Planificación y Simulación de Rutas:</b> Asigna las rutas óptimas a los camiones cisterna considerando capacidades de carga, distancias, consumo de combustible y disponibilidad de flota. Además, permite simular escenarios operativos, tanto semanales como de alta demanda, para prever posibles cuellos de botella.
             </li>
             <li>
                 <b>Monitoreo Gráfico en Tiempo Real:</b> A través de un panel visual, muestra el estado de los pedidos, rutas asignadas, ubicación de vehículos y desempeño general de las operaciones.

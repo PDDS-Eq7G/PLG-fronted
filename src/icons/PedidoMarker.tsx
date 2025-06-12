@@ -1,6 +1,7 @@
 import React from 'react';
 
 interface Props {
+  id?: string; // Opcional para permitir reutilización sin ID
   x: number;
   y: number;
   cellSize: number;
@@ -9,7 +10,7 @@ interface Props {
   opacity?: number;
 }
 
-const PedidoMarker: React.FC<Props> = ({ x, y, cellSize, gridSizeY, color = '#FF0000', opacity = 1 }) => {
+const PedidoMarker: React.FC<Props> = ({ id, x, y, cellSize, gridSizeY, color = '#FF0000', opacity = 1 }) => {
   const pixelX = x * cellSize + cellSize / 2;
   const pixelY = (gridSizeY - 1 - y) * cellSize + cellSize / 2;
 
@@ -19,9 +20,12 @@ const PedidoMarker: React.FC<Props> = ({ x, y, cellSize, gridSizeY, color = '#FF
         position: 'absolute',
         left: pixelX - 8,
         top: pixelY - 10,
-        pointerEvents: 'none',
         opacity,
+        zIndex: 1000,
       }}
+      role="img"
+      aria-label={id}
+      title={id}
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="21" viewBox="0 0 16 21" fill="none">
         <path

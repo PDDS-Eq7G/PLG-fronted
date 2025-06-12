@@ -7,11 +7,22 @@ import API_URL from '../config';
 export interface HistorialMinuto {
   minuto: string;
   nodosBloqueados: { posicion: {x: number; y: number}; }[];
-  pedidos: any[];
+  pedidos: {
+    cantidadPorEntregar: number;
+    cantidadTotal: number;
+    asignacion: Record<string, AsignacionDetalle>;
+    cantidadPorAsignar: number;
+    estado: string;
+    fechaLlegada: string;
+    fechaLimite: string;
+    idPedido: string;
+  }[];
   camiones: {
     posicion: { x: number; y: number };
     codigo: string;
     estado: string;
+    cargaActual: number;
+    capacidadMaxima: number;
   }[];
   pedidosUbicacion: {
     posicion: { x: number; y: number };
@@ -19,16 +30,22 @@ export interface HistorialMinuto {
   }[];
 }
 
+export interface AsignacionDetalle {
+  cantidadAsignada: number;
+  tiempoEntregaEstimado: number;
+}
+
 export interface HistorialConsumoFinal {
   duracionEjecucion: number;
   consumoTotal: number;
-  // Make sure this matches the exact structure of the final element if it's different
-  // For example, if it *also* has a 'minuto' field, you might need to adjust the filtering logic.
-  // Assuming it's a separate summary object.
+}
+
+export interface HistorialColapso {
+  colapso: string;
 }
 
 // Union type for the historial array
-export type HistorialItem = HistorialMinuto | HistorialConsumoFinal;
+export type HistorialItem = HistorialMinuto | HistorialConsumoFinal | HistorialColapso;
 
 interface SimulacionContextType {
   velocidad: number;
@@ -51,6 +68,9 @@ interface SimulacionContextType {
   nLlamada: number;
   setNLlamada: React.Dispatch<React.SetStateAction<number>>;
   resetSimulationState: () => void;
+  tipoSimulacion: String;
+  simulacionBackendFinalizada: boolean;
+  setSimulacionBackendFinalizada: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const SimulacionContext = createContext<SimulacionContextType | undefined>(undefined);
@@ -64,6 +84,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
   const [finSimulacion, setFinSimulacion] = useState(false); // Initialize new state
   const [fechaInicio, setFechaInicio] = useState<Date | null>(new Date());
   const maxIteraciones = tipoSimulacion === "SEMANAL" ? Number(169) : undefined;
+  const [simulacionBackendFinalizada, setSimulacionBackendFinalizada] = useState(false);
 
   const [nLlamada, setNLlamada] = useState(1);
   const nLlamadaRef = useRef(nLlamada); // Para usar el valor más reciente en el closure
@@ -106,8 +127,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
 
       if (maxIteraciones !== undefined && nLlamadaRef.current > maxIteraciones) {
         console.log('Simulación: Se alcanzó el máximo de iteraciones');
-        setIsSimulando(false); // Detener la simulación si se exceden las iteraciones
-        setVelocidad(0);
+        setSimulacionBackendFinalizada(true); // Marcar como finalizada
         return;
       }
 
@@ -115,10 +135,13 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
 
       console.log(`Simulación: Llamando a iteración ${nLlamadaRef.current}`);
       try {
+        const endpoint =
+          tipoSimulacion === 'COLAPSO'
+            ? `${API_URL}/api/planificador/colapso`
+            : `${API_URL}/api/planificador/semanal`;
+
         const res = await fetch(
-          `${API_URL}/api/planificador/semanal?fechaInicio=${encodeURIComponent(
-            fechaInicioParam
-          )}&nLlamada=${nLlamadaRef.current}`,
+          `${endpoint}?fechaInicio=${encodeURIComponent(fechaInicioParam)}&nLlamada=${nLlamadaRef.current}`,
           {
             credentials: 'include',
             signal: controller.signal,
@@ -133,27 +156,28 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
 
         const data = await res.json();
 
-        if (data && typeof data === 'object' && 'colapso' in data) {
-          console.log('Simulación: Colapso detectado. Deteniendo simulación.');
-          setIsSimulando(false); // Detener la simulación
-          setVelocidad(0);
-          // Aquí podrías agregar un estado para mostrar un modal de colapso si es necesario.
-          return;
-        }
-
         if (data && Array.isArray(data)) {
-          const minuteData = data.filter((d) => 'minuto' in d);
-          let dataToAdd = [...minuteData];
-
-          if (isLastIteration) {
+          if (data.some(d => 'colapso' in d)) {
+            console.log('Simulación: Colapso detectado.');
+            const colapsoData = data.filter((d) => 'colapso' in d);
+            setHistorial((prevHistorial: HistorialItem[]) => [...prevHistorial, ...colapsoData]);
             const consumoTotalData = data.filter((d) => 'consumoTotal' in d);
-            dataToAdd = [...dataToAdd, ...consumoTotalData];
-            // Aquí, si se añade consumoTotal, significa que la simulación ha terminado
-            setIsSimulando(false); // Detener la simulación
-            setVelocidad(0);
-          }
+            setHistorial((prevHistorial: HistorialItem[]) => [...prevHistorial, ...consumoTotalData]);
+            setSimulacionBackendFinalizada(true); // Marcar como finalizada
+            return;
+          } else {
+            const minuteData = data.filter((d) => 'minuto' in d);
+            let dataToAdd = [...minuteData];
 
-          setHistorial((prevHistorial: HistorialItem[]) => [...prevHistorial, ...dataToAdd]);
+            if (isLastIteration) {
+              const consumoTotalData = data.filter((d) => 'consumoTotal' in d);
+              dataToAdd = [...dataToAdd, ...consumoTotalData];
+              // Aquí, si se añade consumoTotal, significa que la simulación ha terminado
+              setSimulacionBackendFinalizada(true); // Marcar como finalizada
+            }
+
+            setHistorial((prevHistorial: HistorialItem[]) => [...prevHistorial, ...dataToAdd]);
+          }
         }
 
         setNLlamada((prev) => prev + 1);
@@ -231,6 +255,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
     setNLlamada(1); // Reiniciar nLlamada
     setFinSimulacion(false); // Crucial for new simulations
     setFechaInicio(new Date());
+    setSimulacionBackendFinalizada(false);
 
     fetch(`${API_URL}/api/planificador/reiniciar`, { credentials: 'include' })
       .then(() => console.log('Simulación reiniciada en backend'))
@@ -260,6 +285,9 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
         nLlamada,
         setNLlamada,
         resetSimulationState,
+        tipoSimulacion,
+        simulacionBackendFinalizada,
+        setSimulacionBackendFinalizada,
       }}
     >
       {children}

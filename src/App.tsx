@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import SimulacionSemanal from './pages/SimulacionSemanal/SimulacionSemanal';
+import SimulacionColapso from './pages/SimulacionColapso/SimulacionColapso';
 import { ConfigProvider } from './context/ConfigContext';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/simulacion-semanal" element={<SimulacionSemanal />} />
+          <Route path="/simulacion-colapso-logistico" element={<SimulacionColapso />} />
         </Routes>
       </Router>
     </ConfigProvider>

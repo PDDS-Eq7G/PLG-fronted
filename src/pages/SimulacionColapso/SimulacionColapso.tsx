@@ -6,29 +6,28 @@ import ControlDeMandoCompleto from '../../components/ControlDeMando/ControlDeMan
 import ListaFlotaYPedidos from '../../components/ListaFlotaYPedidos/ListaFlotaYPedidos';
 import { SimulacionProvider } from '../../context/SimulacionContext';
 
-const SimulacionSemanal = () => {
+const SimulacionColapso = () => {
   return (
-    <SimulacionProvider tipoSimulacion="SEMANAL">
+    <SimulacionProvider tipoSimulacion="COLAPSO">
       <MainLayout>
         <div className="app-layout-container">
           <div className="main-page-content">
             <SimulationMap />
           </div>
-          <div className="control-wrapper">
-            <BarraLateral
-              expandedWidth="362px"
-              collapsedWidth="55px"
-              initialCollapsed={false}
-              toggleBarTitle=""
-            >
-              <ControlDeMandoCompleto />
-              <ListaFlotaYPedidos />
-            </BarraLateral>
-          </div>
+
+          <BarraLateral
+            expandedWidth="362px"
+            collapsedWidth="55px"
+            initialCollapsed={false}
+            toggleBarTitle=""
+          >
+            <ControlDeMandoCompleto />
+            <ListaFlotaYPedidos />
+          </BarraLateral>
         </div>
       </MainLayout>
     </SimulacionProvider>
   );
 };
 
-export default SimulacionSemanal;
+export default SimulacionColapso;

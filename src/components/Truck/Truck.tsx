@@ -41,7 +41,9 @@ export const Truck: React.FC<TruckProps> = ({
         justifyContent: 'center',
         //pointerEvents: 'none',
         transition: 'left 0.5s linear, top 0.5s linear', // Animación suave
+        zIndex: 1100,
       }}
+      role="img"
       aria-label={id}
       title={id}
     >

@@ -9,6 +9,7 @@ import { useConfig } from '../../context/ConfigContext';
 import { getTanques } from '../../api/index';
 import ModalResumenEjecucion from '../ModalResumenEjecucion/ModalResumenEjecucion';
 import PedidoMarker from '../../icons/PedidoMarker';
+import { set } from 'date-fns';
 interface Position { x: number; y: number; }
 interface Truck { codigo: string; posicion: Position; }
 interface Pedido { idPedido: string; posicion: Position; }
@@ -41,6 +42,8 @@ const SimulationMap: React.FC = () => {
   const [consumoFinal, setConsumoFinal] = useState<number | null>(null);
   const [rutasPorCamion, setRutasPorCamion] = useState<Record<string, Position[]>>({});
   const [pedidosEntregadosVisibles, setPedidosEntregadosVisibles] = useState<Record<string, PedidoConTiempo>>({});
+  const [minutoColapso, setMinutoColapso] = useState<string | null>(null);
+  const [pedidosNoEntregados, setPedidosNoEntregados] = useState<Record<string, Pedido>>({});
 
   const scale = Math.min(userScale * autoScale, 3);
 
@@ -114,12 +117,21 @@ const SimulationMap: React.FC = () => {
   });
 
   useEffect(() => {
-    if (historial.length > 0 && minutoActualIdx === historial.length - 1) {
-      const ultimo = historial[historial.length - 1];
-      if (ultimo && 'consumoTotal' in ultimo) {
-        setConsumoFinal(ultimo.consumoTotal);
+    if (historial.length === 0) return;
+    
+    const last = historial[historial.length - 1];
+    const secondLast = historial[historial.length - 2];
+
+    if (secondLast && 'colapso' in  secondLast && last && 'consumoTotal' in last) {;
+      if (minutoActualIdx === historial.length - 2) {
+        setMinutoColapso(secondLast.colapso.replace('T', ' '));
+        setConsumoFinal(last.consumoTotal);
         setIsModalOpen(true);
       }
+    } else if (last && 'consumoTotal' in last && minutoActualIdx === historial.length - 1) {
+      setMinutoColapso(null);
+      setConsumoFinal(last.consumoTotal);
+      setIsModalOpen(true);
     }
   }, [minutoActualIdx, historial]);
 
@@ -150,6 +162,27 @@ const SimulationMap: React.FC = () => {
     if (!minutoActualData || !('minuto' in minutoActualData)) return;
 
     const pedidosActuales = minutoActualData.pedidosUbicacion ?? [];
+
+    setPedidosNoEntregados((prev) => {
+      const nuevos: Record<string, Pedido> = {};
+
+      // Mantener los pedidos que aún no se han entregado
+      Object.entries(prev).forEach(([id, pedido]) => {
+        if (pedidosActuales.some(p => p.idPedido === id)) {
+          nuevos[id] = pedido;
+        }
+      });
+
+      // Agregar los pedidos actuales que no estaban antes
+      pedidosActuales.forEach(p => {
+        if (!nuevos[p.idPedido]) {
+          nuevos[p.idPedido] = p;
+        }
+      });
+
+      return nuevos;
+    })
+
     const minutoActualTimestamp = new Date(minutoActualData.minuto).getTime();
 
     setPedidosEntregadosVisibles((prev) => {
@@ -302,9 +335,23 @@ const SimulationMap: React.FC = () => {
             </svg>
           ))}
 
+          {Object.values(pedidosNoEntregados).map((p) => (
+            <PedidoMarker
+              key={`pendiente-${p.idPedido}`}
+              id={"P"+String(p.idPedido).padStart(5, '0')}
+              x={p.posicion.x}
+              y={p.posicion.y}
+              cellSize={cellSize}
+              gridSizeY={gridSize.alto}
+              color="#ff0000"
+              opacity={1.0}
+            />
+          ))}
+
           {Object.values(pedidosEntregadosVisibles).map((p) => (
             <PedidoMarker
               key={`entregado-${p.idPedido}`}
+              id={"P"+String(p.idPedido).padStart(5, '0')}
               x={p.posicion.x}
               y={p.posicion.y}
               cellSize={cellSize}
@@ -314,15 +361,20 @@ const SimulationMap: React.FC = () => {
             />
           ))}
 
-          {currentFlota.map((camion) => (
-            <TruckComponent
-              key={camion.codigo}
-              id={camion.codigo}
-              position={camion.posicion}
-              cellSize={cellSize}
-              color={getColorForTruck(camion.codigo)}
-              gridSizeY={gridSize.alto}
-            />
+          {currentFlota
+            .filter((camion) => {
+              // Ocultar si la posición del camión coincide con la del almacén central
+              return !(almacenPos && camion.posicion.x === almacenPos.x && camion.posicion.y === almacenPos.y);
+            })
+            .map((camion) => (
+              <TruckComponent
+                key={camion.codigo}
+                id={camion.codigo}
+                position={camion.posicion}
+                cellSize={cellSize}
+                color={getColorForTruck(camion.codigo)}
+                gridSizeY={gridSize.alto}
+              />
           ))}
         </div>
         <div className="zoom-controls">
@@ -337,6 +389,9 @@ const SimulationMap: React.FC = () => {
             {consumoFinal !== null && (
               <div style={{ marginTop: '10px', fontSize: '1.2rem', fontWeight: 'bold' }}>
                 <p>Consumo Total: {consumoFinal.toFixed(3)} galones</p>
+                {minutoColapso && (
+                  <p>Minuto de colapso: {minutoColapso}</p>
+                )}
               </div>
             )}
           </>

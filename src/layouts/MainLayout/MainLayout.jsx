@@ -37,7 +37,7 @@ const MainLayout = ({ children }) => {
               <li onClick={() => {}}>Bienvenido</li>
               <li onClick={() => {}}>Operaciones día a día</li>
               <li onClick={() => navigate('/simulacion-semanal')}>Simulación Semanal</li>
-              <li onClick={() => {}}>Simulación Colapso Logístico</li>
+              <li onClick={() => navigate('/simulacion-colapso-logistico')}>Simulación Colapso Logístico</li>
               <li onClick={() => {}}>Cargar Datos</li>
               <li onClick={() => {}}>Historial</li>
               <li className="logout" onClick={handleLogout}>Cerrar Sesión</li>
