@@ -19,7 +19,7 @@ const BarraLateral: React.FC<BarraLateralProps> = ({
   collapsedWidth = "55px",
   initialCollapsed = false,
   toggleBarTitle = "",
-  animationDurationMs = 500, // 0.5s
+  animationDurationMs = 300,
   onCollapsedChange,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);

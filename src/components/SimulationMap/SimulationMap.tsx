@@ -203,9 +203,11 @@ const SimulationMap: React.FC = () => {
       top: containerRef.current.scrollTop,
     };
     containerRef.current.classList.add('dragging');
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', stopPanning);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: MouseEvent) => {
     if (!isPanning.current || !containerRef.current) return;
     const dx = e.clientX - startPoint.current.x;
     const dy = e.clientY - startPoint.current.y;
@@ -215,6 +217,8 @@ const SimulationMap: React.FC = () => {
 
   const stopPanning = () => {
     isPanning.current = false;
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', stopPanning);
     if (containerRef.current) {
       containerRef.current.classList.remove('dragging');
     }
@@ -226,9 +230,6 @@ const SimulationMap: React.FC = () => {
         className="grid-map-frame"
         ref={containerRef}
         onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopPanning}
-        onMouseLeave={stopPanning}
       >
         <div
           style={{
