@@ -3,7 +3,7 @@ import SubirArchivoButton from "../SubirArchivoButton/SubirArchivoButton";
 const CargarMantenimientos = () => {
   return (
     <SubirArchivoButton
-      titulo="Cargar Mantenimiento"
+      titulo="Cargar Mantenimientos"
       endpoint="/mantenimiento/importar"
       accept=".txt"
     />
