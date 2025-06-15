@@ -4,7 +4,7 @@ const CargarMantenimientos = () => {
   return (
     <SubirArchivoButton
       titulo="Cargar Mantenimiento"
-      endpoint="/api/mantenimiento/importar"
+      endpoint="/mantenimiento/importar"
       accept=".txt"
     />
   );

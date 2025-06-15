@@ -4,7 +4,7 @@ const CargarBloqueos = () => {
   return (
     <SubirArchivoButton
       titulo="Cargar Bloqueos"
-      endpoint="/api/bloqueo/importar"
+      endpoint="/bloqueo/importar"
       accept=".txt"
     />
   );

@@ -4,7 +4,7 @@ const CargarPedidos = () => {
   return (
     <SubirArchivoButton
       titulo="Cargar Pedidos"
-      endpoint="/api/pedido/importar"
+      endpoint="/pedido/importar"
       accept=".txt"
     />
   );

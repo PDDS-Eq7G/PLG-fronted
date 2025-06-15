@@ -4,7 +4,7 @@ const CargarAverias = () => {
   return (
     <SubirArchivoButton
       titulo="Cargar Averías"
-      endpoint="/api/averia/importar"
+      endpoint="/averia/importar"
       accept=".txt"
     />
   );
