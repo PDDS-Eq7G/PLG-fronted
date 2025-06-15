@@ -184,7 +184,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
 
         // Si la simulación aún debe continuar, programar la próxima llamada
         if (isSimulando && !controller.signal.aborted) { // isSimulando debe seguir siendo true aquí
-            timeoutId = setTimeout(() => hacerLlamadaAPI(currentExecution), 100); // Pequeño retardo entre llamadas
+            timeoutId = setTimeout(() => hacerLlamadaAPI(currentExecution), 30000); // Retardo de 30 segundos entre llamadas
         }
 
       } catch (error: any) {
