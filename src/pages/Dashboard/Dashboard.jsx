@@ -5,7 +5,7 @@ const Dashboard = () => {
   return (
     <MainLayout>
       <div className="dashboard-content">
-        <h1>Bienvenido al Sistema de Planificación y Monitoreo Logístico de PLG v4</h1>
+        <h1>Bienvenido al Sistema de Planificación y Monitoreo Logístico de PLG v5</h1>
         <p>En PLG, estamos comprometidos con brindar un servicio eficiente, seguro y puntual en la distribución de Gas Licuado de Petróleo (GLP) a nuestros clientes industriales, comerciales y residenciales en la ciudad XYZ. Con el objetivo de mantener nuestra política de cero incumplimientos en los plazos de entrega, hemos desarrollado esta plataforma tecnológica que moderniza y optimiza nuestras operaciones logísticas.</p>
         <p>Este sistema ha sido diseñado para abordar los principales desafíos que enfrentamos: el registro y validación oportuna de pedidos, la planificación dinámica de rutas de distribución, y el monitoreo gráfico en tiempo real de todas las operaciones. De esta forma, aseguramos un control integral desde que se genera el pedido hasta su entrega final.</p>
         <p>El sistema cuenta con tres componentes principales:</p>        
