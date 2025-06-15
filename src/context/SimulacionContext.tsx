@@ -137,8 +137,8 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
       try {
         const endpoint =
           tipoSimulacion === 'COLAPSO'
-            ? `${API_URL}/api/planificador/colapso`
-            : `${API_URL}/api/planificador/semanal`;
+            ? `${API_URL}/planificador/colapso`
+            : `${API_URL}/planificador/semanal`;
 
         const res = await fetch(
           `${endpoint}?fechaInicio=${encodeURIComponent(fechaInicioParam)}&nLlamada=${nLlamadaRef.current}`,
@@ -257,7 +257,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
     setFechaInicio(new Date());
     setSimulacionBackendFinalizada(false);
 
-    fetch(`${API_URL}/api/planificador/reiniciar`, { credentials: 'include' })
+    fetch(`${API_URL}/planificador/reiniciar`, { credentials: 'include' })
       .then(() => console.log('Simulación reiniciada en backend'))
       .catch((err) => console.error('Error al reiniciar backend:', err));
   }, []);
