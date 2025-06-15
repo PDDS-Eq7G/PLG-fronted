@@ -191,7 +191,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
             'duracionEjecucion' in data[0] &&
             data[0].duracionEjecucion === 0;
           
-            const delay = esRespuestaInstantanea ? 100 : 20000; // 100ms si rápida, 20s si no
+            const delay = esRespuestaInstantanea ? 100 : 15000; // 100ms si rápida, 10s si no
             timeoutId = setTimeout(() => hacerLlamadaAPI(currentExecution), delay);
         }
 
