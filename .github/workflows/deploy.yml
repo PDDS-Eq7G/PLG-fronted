@@ -28,4 +28,6 @@ jobs:
         ssh-keyscan -H 200.16.7.169 >> ~/.ssh/known_hosts
 
     - name: Ejecutar script remoto
-      run: ssh amercado@200.16.7.169 "bash /home/amercado/deploy_frontend.sh"
+      env:
+        GITHUB_TOKEN: ${{ steps.auth.outputs.token }}
+      run: ssh amercado@200.16.7.169 "export GITHUB_TOKEN=${{ steps.auth.outputs.token }} && bash /home/amercado/deploy_frontend.sh"
