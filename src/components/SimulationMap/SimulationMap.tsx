@@ -117,6 +117,30 @@ const SimulationMap: React.FC = () => {
     y: (gridSize.alto - 1 - pos.y) * cellSize + cellSize / 2,
   });
 
+  const expandToManhattanPath = (prev: Position, next: Position): Position[] => {
+    const path: Position[] = [];
+    let x = prev.x;
+    let y = prev.y;
+
+    path.push({ x, y });
+
+    const dx = next.x - x;
+    const stepX = dx >= 0 ? 1 : -1;
+    for (let i = 0; i < Math.abs(dx); i++) {
+      x += stepX;
+      path.push({ x, y });
+    }
+
+    const dy = next.y - y;
+    const stepY = dy >= 0 ? 1 : -1;
+    for (let i = 0; i < Math.abs(dy); i++) {
+      y += stepY;
+      path.push({ x, y });
+    }
+
+    return path;
+  };
+
   useEffect(() => {
     if (historial.length === 0) return;
     
@@ -143,13 +167,27 @@ const SimulationMap: React.FC = () => {
       const nuevas = { ...prev };
       minutoActualData.camiones.forEach(({ codigo, posicion, estado }) => {
         const prevRuta = nuevas[codigo] || [];
-        if (estado === 'DESCARGANDO' || estado === 'FINALIZADO' || estado === 'TERMINADO' 
-          || estado === 'AVERIADO' || (estado === 'DISPONIBLE' && posicion.x === almacenPos?.x && posicion.y === almacenPos?.y)) {
+        if (
+          estado === 'DESCARGANDO' ||
+          estado === 'FINALIZADO' ||
+          estado === 'TERMINADO' ||
+          estado === 'AVERIADO' ||
+          (estado === 'DISPONIBLE' && posicion.x === almacenPos?.x && posicion.y === almacenPos?.y)
+        ) {
           nuevas[codigo] = [];
         } else {
           const ultima = prevRuta[prevRuta.length - 1];
-          if (!ultima || ultima.x !== posicion.x || ultima.y !== posicion.y) {
+          if (!ultima) {
             nuevas[codigo] = [...prevRuta, posicion];
+          } else if (ultima.x !== posicion.x || ultima.y !== posicion.y) {
+            const dx = posicion.x - ultima.x;
+            const dy = posicion.y - ultima.y;
+            if (Math.abs(dx) > 1 || Math.abs(dy) > 1 || (dx !== 0 && dy !== 0)) {
+              const expanded = expandToManhattanPath(ultima, posicion).slice(1);
+              nuevas[codigo] = [...prevRuta, ...expanded];
+            } else {
+              nuevas[codigo] = [...prevRuta, posicion];
+            }
           }
         }
       });
@@ -179,12 +217,25 @@ const SimulationMap: React.FC = () => {
 
     minutoActualData.camiones.forEach(({ codigo, posicion }) => {
       const futuros: Position[] = [];
+      let prevStep = posicion;
       for (let idx = minutoActualIdx + 1; idx < historial.length; idx++) {
         const data = historial[idx];
         if (!('camiones' in data)) continue;
         const fut = data.camiones.find(c => c.codigo === codigo);
         if (!fut) break;
-        futuros.push(fut.posicion);
+
+        const nextPos = fut.posicion;
+        const dx = nextPos.x - prevStep.x;
+        const dy = nextPos.y - prevStep.y;
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1 || (dx !== 0 && dy !== 0)) {
+          const expanded = expandToManhattanPath(prevStep, nextPos).slice(1);
+          futuros.push(...expanded);
+        } else {
+          futuros.push(nextPos);
+        }
+
+        prevStep = nextPos;
+
         if (checkReset(fut.estado, fut.posicion)) {
           break;
         }
