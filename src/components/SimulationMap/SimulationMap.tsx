@@ -41,6 +41,7 @@ const SimulationMap: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [consumoFinal, setConsumoFinal] = useState<number | null>(null);
   const [rutasPorCamion, setRutasPorCamion] = useState<Record<string, Position[]>>({});
+  const [rutasPendientesPorCamion, setRutasPendientesPorCamion] = useState<Record<string, Position[]>>({});
   const [pedidosEntregadosVisibles, setPedidosEntregadosVisibles] = useState<Record<string, PedidoConTiempo>>({});
   const [minutoColapso, setMinutoColapso] = useState<string | null>(null);
   const [pedidosNoEntregados, setPedidosNoEntregados] = useState<Record<string, Pedido>>({});
@@ -155,6 +156,44 @@ const SimulationMap: React.FC = () => {
       return nuevas;
     });
   }, [minutoActualIdx, minutoActualData]);
+
+  useEffect(() => {
+    if (
+      minutoActualIdx === -1 ||
+      !minutoActualData ||
+      !('camiones' in minutoActualData) ||
+      !almacenPos
+    ) {
+      setRutasPendientesPorCamion({});
+      return;
+    }
+
+    const checkReset = (estado: string, pos: Position) =>
+      estado === 'DESCARGANDO' ||
+      estado === 'FINALIZADO' ||
+      estado === 'TERMINADO' ||
+      estado === 'AVERIADO' ||
+      (estado === 'DISPONIBLE' && pos.x === almacenPos.x && pos.y === almacenPos.y);
+
+    const nuevas: Record<string, Position[]> = {};
+
+    minutoActualData.camiones.forEach(({ codigo, posicion }) => {
+      const futuros: Position[] = [];
+      for (let idx = minutoActualIdx + 1; idx < historial.length; idx++) {
+        const data = historial[idx];
+        if (!('camiones' in data)) continue;
+        const fut = data.camiones.find(c => c.codigo === codigo);
+        if (!fut) break;
+        futuros.push(fut.posicion);
+        if (checkReset(fut.estado, fut.posicion)) {
+          break;
+        }
+      }
+      nuevas[codigo] = [posicion, ...futuros];
+    });
+
+    setRutasPendientesPorCamion(nuevas);
+  }, [minutoActualIdx, historial, almacenPos, minutoActualData]);
 
   type PedidoConTiempo = Pedido & { minutoDesaparicion: string };
 
@@ -329,6 +368,33 @@ const SimulationMap: React.FC = () => {
                     stroke={getColorForTruck(codigo)}
                     strokeWidth="2"
                     strokeLinecap="round"
+                  />
+                );
+              })}
+            </svg>
+          ))}
+
+          {Object.entries(rutasPendientesPorCamion).map(([codigo, ruta]) => (
+            <svg
+              key={`ruta-futura-${codigo}`}
+              className="route-future"
+              width={cellSize * gridSize.ancho}
+              height={cellSize * gridSize.alto}
+            >
+              {ruta.slice(1).map((pos, i) => {
+                const prev = getPixelCoords(ruta[i]);
+                const curr = getPixelCoords(pos);
+                return (
+                  <line
+                    key={`${codigo}-futuro-${i}`}
+                    x1={prev.x}
+                    y1={prev.y}
+                    x2={curr.x}
+                    y2={curr.y}
+                    stroke={getColorForTruck(codigo)}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeDasharray="4 4"
                   />
                 );
               })}

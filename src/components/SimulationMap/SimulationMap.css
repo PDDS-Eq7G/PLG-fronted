@@ -112,4 +112,13 @@
   z-index: 1;
 }
 
+.route-future {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 1;
+}
+
 
