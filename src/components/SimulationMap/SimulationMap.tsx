@@ -491,6 +491,7 @@ const SimulationMap: React.FC = () => {
                 cellSize={cellSize}
                 color={getColorForTruck(camion.codigo)}
                 gridSizeY={gridSize.alto}
+                estado={camion.estado}
               />
           ))}
         </div>
