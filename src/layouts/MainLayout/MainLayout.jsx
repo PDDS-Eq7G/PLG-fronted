@@ -1,6 +1,6 @@
-import './MainLayout.css';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import "./MainLayout.css";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const MainLayout = ({ children }) => {
   const navigate = useNavigate();
@@ -8,21 +8,20 @@ const MainLayout = ({ children }) => {
 
   const handleLogout = () => {
     // Lógica para cerrar sesión
-    navigate('/');
+    navigate("/");
   };
-  
+
   const toggleSidebar = () => {
     setSidebarVisible(!sidebarVisible);
-  }
+  };
 
   return (
     <div className="main-container">
-
       <button className="toggle-button" onClick={toggleSidebar}>
-        {sidebarVisible ? '◀' : '▶'}
+        {sidebarVisible ? "◀" : "▶"}
       </button>
       {/* Barra lateral */}
-      {sidebarVisible &&(
+      {sidebarVisible && (
         <aside className="sidebar">
           <div className="logo-container">
             <div className="logo">PLG</div>
@@ -36,11 +35,17 @@ const MainLayout = ({ children }) => {
             <ul>
               <li onClick={() => {}}>Bienvenido</li>
               <li onClick={() => {}}>Operaciones día a día</li>
-              <li onClick={() => navigate('/simulacion-semanal')}>Simulación Semanal</li>
-              <li onClick={() => navigate('/simulacion-colapso-logistico')}>Simulación Colapso Logístico</li>
-              <li onClick={() => {}}>Cargar Datos</li>
+              <li onClick={() => navigate("/simulacion-semanal")}>
+                Simulación Semanal
+              </li>
+              <li onClick={() => navigate("/simulacion-colapso-logistico")}>
+                Simulación Colapso Logístico
+              </li>
+              <li onClick={() => navigate("/cargar-datos")}>Cargar Datos</li>
               <li onClick={() => {}}>Historial</li>
-              <li className="logout" onClick={handleLogout}>Cerrar Sesión</li>
+              <li className="logout" onClick={handleLogout}>
+                Cerrar Sesión
+              </li>
             </ul>
           </nav>
         </aside>
@@ -49,9 +54,7 @@ const MainLayout = ({ children }) => {
       {/* Contenido principal */}
       <div className="content-area">
         {/* Contenido dinámico */}
-        <main className="main-content">
-          {children}
-        </main>
+        <main className="main-content">{children}</main>
       </div>
     </div>
   );
