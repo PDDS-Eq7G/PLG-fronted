@@ -1,6 +1,7 @@
 // src/components/Truck/Truck.tsx
 import React from 'react';
 import TruckSvgIcon from '../../icons/TruckSvgIcon';
+import TruckBrokenIcon from '../../icons/TruckBrokenIcon';
 
 interface Position {
   x: number;
@@ -13,6 +14,7 @@ interface TruckProps {
   cellSize: number;
   gridSizeY: number;
   color?: string;
+  estado?: string;
 }
 
 // Renombrado para evitar conflictos
@@ -22,6 +24,7 @@ export const Truck: React.FC<TruckProps> = ({
   cellSize,
   gridSizeY,
   color,
+  estado,
 }) => {
   if (!position) return null; // No renderizar si no hay posición
 
@@ -47,11 +50,19 @@ export const Truck: React.FC<TruckProps> = ({
       aria-label={id}
       title={id}
     >
-      <TruckSvgIcon
-        width={cellSize * 0.8}
-        height={cellSize * 0.8}
-        color={color || '#D300DE'}
-      />
+      {estado === 'AVERIADO' ? (
+        <TruckBrokenIcon
+          width={cellSize * 0.8}
+          height={cellSize * 0.8}
+          color={color || '#D300DE'}
+        />
+      ) : (
+        <TruckSvgIcon
+          width={cellSize * 0.8}
+          height={cellSize * 0.8}
+          color={color || '#D300DE'}
+        />
+      )}
     </div>
   );
 };
