@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import API_URL from '../config';
+import { v4 as uuidv4 } from 'uuid';
 
 // Define el tipo para los datos de un minuto del historial
 export interface HistorialMinuto {
@@ -85,6 +86,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
   const [fechaInicio, setFechaInicio] = useState<Date | null>(new Date());
   const maxIteraciones = tipoSimulacion === "SEMANAL" ? Number(169) : undefined;
   const [simulacionBackendFinalizada, setSimulacionBackendFinalizada] = useState(false);
+  const simulacionIdRef = useRef<string>(uuidv4());
 
   const [nLlamada, setNLlamada] = useState(1);
   const nLlamadaRef = useRef(nLlamada); // Para usar el valor más reciente en el closure
@@ -141,7 +143,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
             : `${API_URL}/planificador/semanal`;
 
         const res = await fetch(
-          `${endpoint}?fechaInicio=${encodeURIComponent(fechaInicioParam)}&nLlamada=${nLlamadaRef.current}`,
+          `${endpoint}?simulacionId=${simulacionIdRef.current}&fechaInicio=${encodeURIComponent(fechaInicioParam)}&nLlamada=${nLlamadaRef.current}`,
           {
             credentials: 'include',
             signal: controller.signal,
@@ -265,7 +267,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
     setFechaInicio(new Date());
     setSimulacionBackendFinalizada(false);
 
-    fetch(`${API_URL}/planificador/reiniciar`, { credentials: 'include' })
+    fetch(`${API_URL}/planificador/reiniciar?simulacionId=${simulacionIdRef.current}`, { credentials: 'include' })
       .then(() => console.log('Simulación reiniciada en backend'))
       .catch((err) => console.error('Error al reiniciar backend:', err));
   }, []);
