@@ -85,7 +85,7 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
     return minutoActual.camiones.map((camion) => ({
       codigo: camion.codigo,
       posicion: `(${camion.posicion.x}, ${camion.posicion.y})`,
-      capacidad: `${camion.cargaActual}/${camion.capacidadMaxima} galones (${Math.round((camion.cargaActual / camion.capacidadMaxima) * 100)}%)`,
+      capacidad: `${camion.cargaActual}/${camion.capacidadMaxima} m³ (${Math.round((camion.cargaActual / camion.capacidadMaxima) * 100)}%)`,
     }));
   }, [minutoActual]);
 

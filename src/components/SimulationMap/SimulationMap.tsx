@@ -172,7 +172,7 @@ const SimulationMap: React.FC = () => {
           estado === 'FINALIZADO' ||
           estado === 'TERMINADO' ||
           estado === 'AVERIADO' ||
-          (estado === 'DISPONIBLE' && posicion.x === almacenPos?.x && posicion.y === almacenPos?.y)
+          (estado !== 'OCUPADO' && posicion.x === almacenPos?.x && posicion.y === almacenPos?.y)
         ) {
           nuevas[codigo] = [];
         } else {
@@ -211,7 +211,7 @@ const SimulationMap: React.FC = () => {
       estado === 'FINALIZADO' ||
       estado === 'TERMINADO' ||
       estado === 'AVERIADO' ||
-      (estado === 'DISPONIBLE' && pos.x === almacenPos.x && pos.y === almacenPos.y);
+      (estado !== 'OCUPADO' && pos.x === almacenPos.x && pos.y === almacenPos.y);
 
     const nuevas: Record<string, Position[]> = {};
 
