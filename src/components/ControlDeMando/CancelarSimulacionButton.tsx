@@ -6,9 +6,10 @@ import '../SubirArchivoButton/SubirArchivoButton.css';
 interface CancelarSimulacionButtonProps {
   onClick: () => void;
   disabled?: boolean;
+  label?: string;
 }
 
-const CancelarSimulacionButton: React.FC<CancelarSimulacionButtonProps> = ({ onClick, disabled }) => {
+const CancelarSimulacionButton: React.FC<CancelarSimulacionButtonProps> = ({ onClick, disabled, label = 'Cancelar Simulación' }) => {
   return (
     <div className="cancel-simulation-container">
       <button
@@ -17,7 +18,7 @@ const CancelarSimulacionButton: React.FC<CancelarSimulacionButtonProps> = ({ onC
         disabled={disabled}
         className="cancel-simulation-button"
       >
-        <CancelSimulacionIcon /> Cancelar Simulación
+        <CancelSimulacionIcon /> {label}
       </button>
     </div>
   );

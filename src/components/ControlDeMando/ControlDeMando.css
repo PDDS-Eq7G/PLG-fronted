@@ -249,6 +249,21 @@
   height: 20px;
 }
 
+.panel-section-cajetin {
+  height: auto;
+  border-bottom: 1px solid #D7D7D7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px 12px 8px;
+}
+
 .panel-section strong {
   margin-right: 0.5rem;
+}
+
+.insertar-averia-section input,
+.insertar-averia-section select {
+  margin-left: 8px;
+  margin-bottom: 6px;
 }

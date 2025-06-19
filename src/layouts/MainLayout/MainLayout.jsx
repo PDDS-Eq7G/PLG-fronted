@@ -33,15 +33,21 @@ const MainLayout = ({ children }) => {
 
           <nav className="menu">
             <ul>
-              <li onClick={() => {}}>Bienvenido</li>
-              <li onClick={() => {}}>Operaciones día a día</li>
+              <li onClick={() => navigate("/dashboard")}>
+                Bienvenido
+              </li>
+              <li onClick={() => navigate("/operaciones-dia-a-dia")}>
+                Operaciones día a día
+              </li>
               <li onClick={() => navigate("/simulacion-semanal")}>
                 Simulación Semanal
               </li>
               <li onClick={() => navigate("/simulacion-colapso-logistico")}>
                 Simulación Colapso Logístico
               </li>
-              <li onClick={() => navigate("/cargar-datos")}>Cargar Datos</li>
+              <li onClick={() => navigate("/cargar-datos")}>
+                Cargar Datos
+              </li>
               <li onClick={() => {}}>Historial</li>
               <li className="logout" onClick={handleLogout}>
                 Cerrar Sesión

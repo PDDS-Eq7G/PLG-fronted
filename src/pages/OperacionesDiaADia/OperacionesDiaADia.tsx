@@ -2,14 +2,14 @@ import React from 'react';
 import MainLayout from '../../layouts/MainLayout/MainLayout';
 import SimulationMap from '../../components/SimulationMap/SimulationMap';
 import BarraLateral from '../../components/BarraLateral/BarraLateral';
-import ControlDeMandoCompleto from '../../components/ControlDeMando/ControlDeMandoCompleto';
+import ControlDeMandoDiaADia from '../../components/ControlDeMando/ControlDeMandoDiaADia';
 import ListaFlotaYPedidos from '../../components/ListaFlotaYPedidos/ListaFlotaYPedidos';
 import { SimulacionProvider } from '../../context/SimulacionContext';
 import CajetinInsertar from '../../components/CajetinInsertar/CajetinInsertar';
 
-const SimulacionSemanal = () => {
+const OperacionesDiaADia = () => {
   return (
-    <SimulacionProvider tipoSimulacion="SEMANAL">
+    <SimulacionProvider tipoSimulacion="DIA_A_DIA">
       <MainLayout>
         <div className="app-layout-container">
           <div className="main-page-content">
@@ -22,8 +22,8 @@ const SimulacionSemanal = () => {
               initialCollapsed={false}
               toggleBarTitle=""
             >
-              <ControlDeMandoCompleto />
-              <CajetinInsertar tipoSimulacion="SEMANAL"/>
+              <ControlDeMandoDiaADia />
+              <CajetinInsertar tipoSimulacion="DIA_A_DIA"/>
               <ListaFlotaYPedidos />
             </BarraLateral>
           </div>
@@ -33,4 +33,4 @@ const SimulacionSemanal = () => {
   );
 };
 
-export default SimulacionSemanal;
+export default OperacionesDiaADia;

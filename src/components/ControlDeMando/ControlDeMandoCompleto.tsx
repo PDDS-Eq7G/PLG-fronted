@@ -32,11 +32,6 @@ const ControlDeMandoCompleto: React.FC = () => {
     tipoSimulacion,
   } = useSimulacion();
 
-  //const [fechaInicio, setFechaInicio] = React.useState<Date | null>(new Date());
-  //const [consumoFinal, setConsumoFinal] = useState<number | null>(null);
-  //const maxIteraciones = tipoSimulacion === "SEMANAL" ? Number(169) : undefined;
-  //const { reiniciar } = useSimuladorPlanificacion(fechaInicio, maxIteraciones);
-
   const tiempoSimulado = useMemo(() => {
     const itemActual = historial[minutoActualIdx];
     if (itemActual && 'minuto' in itemActual) {
@@ -45,40 +40,6 @@ const ControlDeMandoCompleto: React.FC = () => {
     }
     return 'Simulación no iniciada';
   }, [minutoActualIdx, historial]);
-
-  // Efecto para controlar la visualización de los minutos
-  /*useEffect(() => {
-    if (velocidad === 0 || !isSimulando) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      // Comprobamos si el índice actual ya es el último del historial
-      if (minutoActualIdx >= historial.length - 1) {
-        // Si hemos llegado al final:
-        reiniciar();
-        setIsSimulando(false);
-        setVelocidad(0);
-        setHistorial([]);
-        setMinutoActualIdx(-1);
-        clearInterval(interval); // Importante: Limpiamos el intervalo.
-
-        const ultimoElemento = historial[historial.length - 1];
-        if (ultimoElemento && 'consumoTotal' in ultimoElemento) {
-          setConsumoFinal(ultimoElemento.consumoTotal);
-        }
-      } else {
-        setMinutoActualIdx((prevIdx: number) => {
-          if (prevIdx < historial.length - 1) {
-            return prevIdx + 1;
-          }
-          return prevIdx;
-        });
-      }
-    }, velocidad);
-
-    return () => clearInterval(interval);
-  }, [velocidad, isSimulando, historial, setMinutoActualIdx]);*/
 
   const clampSpeed = (speed: number) => Math.min(maxSpeed, Math.max(minSpeed, speed));
 
@@ -96,14 +57,7 @@ const ControlDeMandoCompleto: React.FC = () => {
 
   const handleCancelSimulation = () => {
     resetSimulationState();
-    /*reiniciar();
-    setIsSimulando(false);
-    setVelocidad(0);
-    setVelocidadReal(1000);
-    setHistorial([]);
-    setMinutoActualIdx(-1);*/
     console.log('Simulación cancelada');
-    //setConsumoFinal(null);
   };
 
   return (

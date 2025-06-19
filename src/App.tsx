@@ -8,20 +8,37 @@ import SimulacionSemanal from "./pages/SimulacionSemanal/SimulacionSemanal";
 import SimulacionColapso from "./pages/SimulacionColapso/SimulacionColapso";
 import CargarDatos from "./pages/CargarDatos/CargarDatos";
 import { ConfigProvider } from "./context/ConfigContext";
+import OperacionesDiaADia from "./pages/OperacionesDiaADia/OperacionesDiaADia";
 
 function App() {
   return (
     <ConfigProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/simulacion-semanal" element={<SimulacionSemanal />} />
+          <Route 
+            path="/" 
+            element={<Login />} 
+          />
+          <Route 
+            path="/dashboard" 
+            element={<Dashboard />} 
+          />
+          <Route
+            path='operaciones-dia-a-dia'
+            element={<OperacionesDiaADia />}
+          />
+          <Route 
+            path="/simulacion-semanal" 
+            element={<SimulacionSemanal />} 
+          />
           <Route
             path="/simulacion-colapso-logistico"
             element={<SimulacionColapso />}
           />
-          <Route path="/cargar-datos" element={<CargarDatos />} />
+          <Route 
+            path="/cargar-datos" 
+            element={<CargarDatos />}
+           />
         </Routes>
       </Router>
     </ConfigProvider>
