@@ -19,6 +19,9 @@
   background-color: #ecf0f1;
 }
 
+.floating-info-box {
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+}
 
 .grid-wrapper {
   display: flex;
