@@ -8,20 +8,23 @@ interface Props {
   gridSizeY: number;
   color?: string;
   opacity?: number;
+  onClick?: () => void;
 }
 
-const PedidoMarker: React.FC<Props> = ({ id, x, y, cellSize, gridSizeY, color = '#FF0000', opacity = 1 }) => {
+const PedidoMarker: React.FC<Props> = ({ id, x, y, cellSize, gridSizeY, color = '#FF0000', opacity = 1, onClick }) => {
   const pixelX = x * cellSize + cellSize / 2;
   const pixelY = (gridSizeY - 1 - y) * cellSize + cellSize / 2;
 
   return (
     <div
+      onClick={onClick}
       style={{
         position: 'absolute',
         left: pixelX - 8,
         top: pixelY - 10,
         opacity,
         zIndex: 1000,
+        cursor: 'pointer',
       }}
       role="img"
       aria-label={id}

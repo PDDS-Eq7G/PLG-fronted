@@ -15,6 +15,7 @@ interface TruckProps {
   gridSizeY: number;
   color?: string;
   estado?: string;
+  onClick?: () => void;
 }
 
 // Renombrado para evitar conflictos
@@ -25,6 +26,7 @@ export const Truck: React.FC<TruckProps> = ({
   gridSizeY,
   color,
   estado,
+  onClick,
 }) => {
   if (!position) return null; // No renderizar si no hay posición
 
@@ -33,6 +35,7 @@ export const Truck: React.FC<TruckProps> = ({
 
   return (
     <div
+      onClick={onClick}
       style={{
         position: 'absolute',
         left: position.x * cellSize,
@@ -42,6 +45,7 @@ export const Truck: React.FC<TruckProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        cursor: 'pointer',
         //pointerEvents: 'none',
         transition: 'left 0.5s linear, top 0.5s linear', // Animación suave
         zIndex: 1100,
