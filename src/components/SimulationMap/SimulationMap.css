@@ -188,14 +188,11 @@
 
 .legend-icon.central { background: #D00000; }
 .legend-icon.intermediate { background: #4671D5; }
-.legend-icon.ta { background: #D300DE; }
-.legend-icon.tb { background: #FFDE00; }
-.legend-icon.tc { background: #00A35C; }
-.legend-icon.td { background: #BF360C; }
-.legend-icon.broken {
-  background-color: "#D300DE";
-  background-size: cover;
-}
+.legend-icon.ta { background-image: url('../../icons/TruckTA.svg'); background-size: cover; }
+.legend-icon.tb { background-image: url('../../icons/TruckTB.svg'); background-size: cover; }
+.legend-icon.tc { background-image: url('../../icons/TruckTC.svg'); background-size: cover; }
+.legend-icon.td { background-image: url('../../icons/TruckTD.svg'); background-size: cover; }
+.legend-icon.broken { background-image: url('../../icons/TruckBroken.svg'); background-size: cover; }
 
 .legend-line.solid {
   height: 4px;
@@ -221,7 +218,5 @@
   background: black;
 }
 
-.legend-order {
-  background: #FFA500;
-}
+.legend-order {  background-image: url('../../icons/Pedido.svg'); background-size: cover; }
 
