@@ -11,8 +11,8 @@ export const GridMap: React.FC<Props> = ({ gridData, cellSize }) => {
   return (
     <div className="grid-map"
     style={{
-      width: cellSize * 70, // 70 columnas
-      height: cellSize * 50 // 50 filas
+      width: cellSize * 71, // 70 nodos horizontales
+      height: cellSize * 51 // 50 nodos verticales
     }}>
       {gridData.map((row, rowIndex) => (
         <div key={rowIndex} style={{ display: 'flex' }}>

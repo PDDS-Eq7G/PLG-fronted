@@ -95,8 +95,8 @@ const SimulationMap: React.FC = () => {
       if (!config) return;
       try {
         const tanquesRes = await getTanques();
-        const ancho = parseInt(config.ancho_ciudad, 10);
-        const alto = parseInt(config.alto_ciudad, 10);
+        const ancho = parseInt(config.ancho_ciudad, 10) + 1;
+        const alto = parseInt(config.alto_ciudad, 10) + 1;
         const almacen = { x: parseInt(config.almacen_central_x, 10), y: parseInt(config.almacen_central_y, 10) };
         const tanques: Position[] = (tanquesRes.data.tanquesIntermedios || []).map((t: any) => t.ubicacion);
 
