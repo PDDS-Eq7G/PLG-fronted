@@ -10,6 +10,7 @@ import { getTanques } from '../../api/index';
 import ModalResumenEjecucion from '../ModalResumenEjecucion/ModalResumenEjecucion';
 import PedidoMarker from '../../icons/PedidoMarker';
 import FloatingInfoBox, { InfoBoxContent } from '../FloatingInfoBox/FloatingInfoBox';
+import { LegendFloatingBox } from '../FloatingInfoBox/LegendFloatingBox';
 import { set } from 'date-fns';
 interface Position { x: number; y: number; }
 interface Truck { codigo: string; posicion: Position; }
@@ -46,6 +47,7 @@ const SimulationMap: React.FC = () => {
   const [pedidosEntregadosVisibles, setPedidosEntregadosVisibles] = useState<Record<string, PedidoConTiempo>>({});
   const [minutoColapso, setMinutoColapso] = useState<string | null>(null);
   const [pedidosNoEntregados, setPedidosNoEntregados] = useState<Record<string, Pedido>>({});
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
 
   const [infoBox, setInfoBox] = useState<{
     x: number;
@@ -564,6 +566,14 @@ const SimulationMap: React.FC = () => {
           <span className="zoom-label">{Math.round(userScale * autoScale * 100)}%</span>
           <button className="zoom-button" onClick={() => setUserScale(s => Math.max(0.5, s - 0.1))}>-</button>
         </div>
+        <button
+          className="help-button"
+          onClick={() => setIsLegendOpen(true)}
+          title="Ver leyenda"
+        >
+          ?
+        </button>
+
 
         <ModalResumenEjecucion isOpen={isModalOpen} onClose={handleCloseModal}>
           <>
@@ -578,6 +588,8 @@ const SimulationMap: React.FC = () => {
             )}
           </>
         </ModalResumenEjecucion>
+
+        {isLegendOpen && <LegendFloatingBox onClose={() => setIsLegendOpen(false)} />}
         </div>
       </div>
     </div>

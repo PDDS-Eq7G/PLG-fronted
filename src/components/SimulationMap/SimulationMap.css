@@ -124,4 +124,104 @@
   z-index: 1;
 }
 
+.help-button {
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  background-color: #ffffff;
+  color: #000;
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #999;
+  cursor: pointer;
+  z-index: 2000;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.legend-box {
+  position: fixed;
+  bottom: 60px;
+  right: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  padding: 15px 20px;
+  z-index: 2000;
+  width: 400px;
+}
+
+.legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.close-button {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.legend-content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.legend-icon, .legend-line, .legend-blocked, .legend-order {
+  display: inline-block;
+  margin-right: 8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.legend-icon.central { background: #D00000; }
+.legend-icon.intermediate { background: #4671D5; }
+.legend-icon.ta { background: #D300DE; }
+.legend-icon.tb { background: #FFDE00; }
+.legend-icon.tc { background: #00A35C; }
+.legend-icon.td { background: #BF360C; }
+.legend-icon.broken {
+  background-color: "#D300DE";
+  background-size: cover;
+}
+
+.legend-line.solid {
+  height: 4px;
+  border-radius: 2px;
+  background: black;
+  width: 18px;
+}
+
+.legend-line.dashed {
+  height: 4px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    to right,
+    black,
+    black 3px,
+    transparent 3px,
+    transparent 6px
+  );
+  width: 18px;
+}
+
+.legend-blocked {
+  background: black;
+}
+
+.legend-order {
+  background: #FFA500;
+}
 
