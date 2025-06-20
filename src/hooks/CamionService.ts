@@ -7,7 +7,7 @@ export interface Truck {
 }
 
 export const fetchTruckPositions = async (): Promise<Truck[]> => {
-  const response = await fetch("http://localhost:8080/api/flota/listar");
+  const response = await fetch("/api/flota/listar");
   if (!response.ok) {
     throw new Error("No se pudieron obtener los camiones");
   }
