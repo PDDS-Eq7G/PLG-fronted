@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import "./CajetinInsertar.css";
 import NotificationPopup from "../NotificationPopup/NotificationPopup";
 import { useSimulacion } from "../../context/SimulacionContext";
+import API_URL from '../../config';
 
 enum Tab {
   AVERIA = "averia",
@@ -82,7 +83,7 @@ const CajetinInsertar: React.FC<CajetinInsertarProps> = ({ tipoSimulacion }) => 
 
   const insertarAveria = async () => {
     const fechaAplicacion = getFechaAplicacion(tipoSimulacion, tiempoSimulado);
-    const url = `/api/averia/insertar-manual?codigoCamion=${codigoCamion}&turno=${turno}&tipo=${tipo}&fechaAplicacion=${fechaAplicacion}`;
+    const url = `${API_URL}/averia/insertar-manual?codigoCamion=${codigoCamion}&turno=${turno}&tipo=${tipo}&fechaAplicacion=${fechaAplicacion}`;
     setLoading(true);
     try {
       const response = await fetch(url, {
@@ -111,7 +112,7 @@ const CajetinInsertar: React.FC<CajetinInsertarProps> = ({ tipoSimulacion }) => 
 
   const insertarPedido = async () => {
     const fechaLlegada = getFechaLlegada(tiempoSimulado);
-    const url = `/api/pedido/insertar-manual?horasLimite=${horasLimite}&destinoX=${destinoX}&destinoY=${destinoY}&idCliente=${idCliente}&cantidad=${cantidad}&fechaLlegada=${fechaLlegada}`;
+    const url = `${API_URL}/pedido/insertar-manual?horasLimite=${horasLimite}&destinoX=${destinoX}&destinoY=${destinoY}&idCliente=${idCliente}&cantidad=${cantidad}&fechaLlegada=${fechaLlegada}`;
     setLoading(true);
     try {
       const response = await fetch(url, {

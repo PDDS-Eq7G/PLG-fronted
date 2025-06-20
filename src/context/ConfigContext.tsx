@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
+import API_URL from '../config'
 
 interface ConfigContextType {
   config: Record<string, string>;
@@ -21,7 +22,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const response = await axios.get('/api/config-general');
+        const response = await axios.get(`${API_URL}/config-general`);
         setConfig(response.data.parametrosConfiguracion || {});
       } catch (err: any) {
         setError(err.message);
