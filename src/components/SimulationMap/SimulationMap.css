@@ -128,16 +128,13 @@
   position: fixed;
   bottom: 15px;
   right: 15px;
-  background-color: #ffffff;
-  color: #000;
-  font-size: 24px;
+  background-image: url('../../icons/Leyenda.svg'); background-size: cover;
   width: 36px;
   height: 36px;
   border-radius: 50%;
   border: 2px solid #999;
   cursor: pointer;
-  z-index: 2000;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  z-index: 1000;
 }
 
 .legend-box {
@@ -183,11 +180,11 @@
   margin-right: 8px;
   width: 18px;
   height: 18px;
-  border-radius: 50%;
+  /* border-radius: 50%; */
 }
 
-.legend-icon.central { background: #D00000; }
-.legend-icon.intermediate { background: #4671D5; }
+.legend-icon.central { background-image: url('../../icons/AlmacenCentral.svg'); background-size: cover; }
+.legend-icon.intermediate { background-image: url('../../icons/AlmacenIntermedio.svg'); background-size: cover; }
 .legend-icon.ta { background-image: url('../../icons/TruckTA.svg'); background-size: cover; }
 .legend-icon.tb { background-image: url('../../icons/TruckTB.svg'); background-size: cover; }
 .legend-icon.tc { background-image: url('../../icons/TruckTC.svg'); background-size: cover; }

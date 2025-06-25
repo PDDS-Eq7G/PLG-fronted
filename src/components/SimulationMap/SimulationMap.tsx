@@ -14,7 +14,7 @@ import { LegendFloatingBox } from '../FloatingInfoBox/LegendFloatingBox';
 import { set } from 'date-fns';
 interface Position { x: number; y: number; }
 interface Truck { codigo: string; posicion: Position; }
-interface Pedido { idPedido: string; posicion: Position; }
+interface Pedido { idPedido: string; posicion: Position; estado?: string; fechaLlegada?: string; }
 interface NodoBloqueado { posicion: Position; }
 
 const getColorForTruck = (codigo: string) => {
@@ -122,10 +122,32 @@ const SimulationMap: React.FC = () => {
 
     if (!configLoading) fetchInitialMap();
   }, [config, configLoading]);
-
+/*
   const minutoActualData = useMemo(() => {
     return minutoActualIdx === -1 ? null : historial[minutoActualIdx];
   }, [historial, minutoActualIdx]);
+*/
+  const minutoActualData = useMemo(() => {
+    if (minutoActualIdx === -1) return null;
+    const data = historial[minutoActualIdx];
+    return 'pedidosUbicacion' in data ? data : null;
+  }, [historial, minutoActualIdx]);
+
+  const pedidosConDatos = useMemo(() => {
+    if (!minutoActualData) return [];
+
+    return minutoActualData.pedidosUbicacion.map(pu => {
+      const detalles = minutoActualData.pedidos.find(p => p.idPedido === pu.idPedido);
+      return {
+        ...pu,
+        estado: detalles?.estado ?? 'Desconocido',
+        fechaLlegada: detalles?.fechaLlegada ?? '',
+        cantidad: detalles?.cantidadTotal ?? 0
+      };
+    });
+  }, [minutoActualData]);
+
+
   const getPixelCoords = (pos: Position) => ({
     x: pos.x * cellSize + cellSize / 2,
     y: (gridSize.alto - 1 - pos.y) * cellSize + cellSize / 2,
@@ -270,7 +292,7 @@ const SimulationMap: React.FC = () => {
 
     setPedidosNoEntregados((prev) => {
       const nuevos: Record<string, Pedido> = {};
-
+      
       // Mantener los pedidos que aún no se han entregado
       Object.entries(prev).forEach(([id, pedido]) => {
         if (pedidosActuales.some(p => p.idPedido === id)) {
@@ -395,6 +417,12 @@ const SimulationMap: React.FC = () => {
         ref={containerRef}
         onMouseDown={handleMouseDown}
       >
+        <button
+          className="help-button"
+          onClick={() => setIsLegendOpen(true)}
+          title="leyenda"
+        >
+        </button>
         <div
           style={{
             width: `${cellSize * gridSize.ancho * scale}px`,
@@ -467,7 +495,7 @@ const SimulationMap: React.FC = () => {
             </svg>
           ))}
 
-          {Object.values(pedidosNoEntregados).map((p) => (
+          {pedidosConDatos.map((p) => (
             <PedidoMarker
               key={`pendiente-${p.idPedido}`}
               id={"P" + String(p.idPedido).padStart(5, '0')}
@@ -483,12 +511,12 @@ const SimulationMap: React.FC = () => {
                   y: (gridSize.alto - 1 - p.posicion.y) * cellSize + cellSize / 2,
                   visible: true,
                   contenido: {
-                    id: 'Pedido ' + p.idPedido,
+                    id: "P" + String(p.idPedido).padStart(5, '0'),
                     tipo: 'pedido',
-                    estado: 'pendiente',
-                    pedido: `(${p.posicion.x}, ${p.posicion.y})`,
-                    llegada: '',
-                    capacidad: '',
+                    estado: p.estado,
+                    ubicacion: `(${p.posicion.x}, ${p.posicion.y})`,
+                    llegada: p.fechaLlegada,
+                    cantidad: p.cantidad,
                   },
                 })
               }
@@ -517,16 +545,17 @@ const SimulationMap: React.FC = () => {
               <div
                 key={camion.codigo}
                 onClick={() => setInfoBox({
-                  x: camion.posicion.x * cellSize,
-                  y: (gridSize.alto - 1 - camion.posicion.y) * cellSize - 10,
+                  x: camion.posicion.x * cellSize + cellSize / 2,
+                  y: (gridSize.alto - 1 - camion.posicion.y) * cellSize + cellSize / 2,
                   visible: true,
                   contenido: {
                     id: camion.codigo,
                     tipo: 'camion',
+                    color: getColorForTruck(camion.codigo),
                     estado: camion.estado,
-                    pedido: 'P004 (32, 22)',
-                    llegada: '03 de Mayo - 14:30',
-                    capacidad: '15/25 (60%)',
+                    pedido: '',
+                    llegada: '',
+                    capacidad: camion.cargaActual + "/" + camion.capacidadMaxima + " (" + Math.round(100.0 * (camion.cargaActual / camion.capacidadMaxima)) + "%)",
                   },
                 })}
                 style={{ position: 'absolute', left: 0, top: 0 }}
@@ -560,14 +589,6 @@ const SimulationMap: React.FC = () => {
           <span className="zoom-label">{Math.round(userScale * autoScale * 100)}%</span>
           <button className="zoom-button" onClick={() => setUserScale(s => Math.max(0.5, s - 0.1))}>-</button>
         </div>
-        <button
-          className="help-button"
-          onClick={() => setIsLegendOpen(true)}
-          title="Ver leyenda"
-        >
-          ?
-        </button>
-
 
         <ModalResumenEjecucion isOpen={isModalOpen} onClose={handleCloseModal}>
           <>

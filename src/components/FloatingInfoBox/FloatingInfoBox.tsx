@@ -1,14 +1,36 @@
 // src/components/FloatingInfoBox/FloatingInfoBox.tsx
 import React, { JSX, useEffect, useRef, useState } from 'react';
 import { FaTimes, FaTruck, FaCubes, FaCalendarAlt, FaBatteryHalf, FaWarehouse } from 'react-icons/fa';
+import TruckSvgIcon from '../../icons/TruckSvgIcon';
+import InfoStatusSvgIcon from '../../icons/InfoStatusSvgIcon';
+import InfoPedidoSvgIcon from '../../icons/InfoPedidoSvgIcon';
+import InfoCalendarioSvgIcon from '../../icons/InfoCalendarioSvgIcon';
+import InfoCapacidadSvgIcon from '../../icons/InfoCapacidadSvgIcon';
+import InfoUbicacionSvgIcon from '../../icons/InfoUbicacionSvgIcon';
+import InfoCantidadSvgIcon from '../../icons/InfoCantidadSvgIcon';
+
+function formatearFecha(fechaStr: string): string {
+  const fecha = new Date(fechaStr);
+  return fecha.toLocaleString('es-PE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
 
 export interface InfoBoxContent {
   id: string;
   tipo: 'camion' | 'pedido' | 'almacen' | string;
+  color?: string;
   estado?: string;
   pedido?: string;
   llegada?: string;
   capacidad?: string;
+  ubicacion?: string;
+  asignacion?: string;
   [key: string]: any;
 }
 
@@ -22,7 +44,7 @@ interface FloatingInfoBoxProps {
   containerHeight: number;
 }
 
-const BOX_WIDTH = 200;
+const BOX_WIDTH = 250;
 const BOX_HEIGHT = 140;
 
 const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
@@ -46,8 +68,8 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
   const handleMouseDown = (e: React.MouseEvent) => {
     isDragging.current = true;
     offset.current = {
-      x: e.clientX - (boxRef.current?.getBoundingClientRect().left ?? 0),
-      y: e.clientY - (boxRef.current?.getBoundingClientRect().top ?? 0),
+      x: e.clientX - pos.x, // - (boxRef.current?.getBoundingClientRect().left ?? 0),
+      y: e.clientY - pos.y, //- (boxRef.current?.getBoundingClientRect().top ?? 0),
     };
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
@@ -72,8 +94,8 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
   if (!visible) return null;
 
   const iconMap: Record<string, JSX.Element> = {
-    camion: <FaTruck color="#d300de" />,
-    pedido: <FaCubes color="#ffc107" />,
+    camion: <TruckSvgIcon width={20} height={20} color={content.color || '#D300DE'} />,
+    pedido: <InfoPedidoSvgIcon width={20} height={20} />,
     almacen: <FaWarehouse color="#4caf50" />,
   };
 
@@ -91,7 +113,7 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         fontFamily: 'sans-serif',
         fontSize: '0.85rem',
-        zIndex: 999,
+        zIndex: 5000,
         overflow: 'hidden',
         userSelect: 'none',
       }}
@@ -131,26 +153,44 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
       <div style={{ padding: '8px 12px' }}>
         {content.estado && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 6 }}>
-            <FaTruck color="#3f51b5" />
+            <InfoStatusSvgIcon width={22} height={20} />
             <span>Estado: {content.estado}</span>
+          </div>
+        )}
+        {content.ubicacion && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 6 }}>
+            <InfoUbicacionSvgIcon width={22} height={20} />
+            <span>Ubicación: {content.ubicacion}</span>
           </div>
         )}
         {content.pedido && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 6 }}>
-            <FaCubes color="#ffc107" />
+            <InfoPedidoSvgIcon width={22} height={20} />
             <span>Pedido: {content.pedido}</span>
           </div>
         )}
         {content.llegada && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 6 }}>
-            <FaCalendarAlt color="#2196f3" />
-            <span>Llegada: {content.llegada}</span>
+            <InfoCalendarioSvgIcon width={22} height={20} />
+            <span>Llegada: {formatearFecha(content.llegada)}</span>
           </div>
         )}
         {content.capacidad && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaBatteryHalf color="#ff9800" />
-            <span>Capacidad: {content.capacidad}</span>
+            <InfoCapacidadSvgIcon width={22} height={20} />
+            <span>Capacidad (m<sup>3</sup>): {content.capacidad}</span>
+          </div>
+        )}
+        {content.cantidad && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <InfoCantidadSvgIcon width={22} height={20} />
+            <span>Cantidad: {content.cantidad}</span>
+          </div>
+        )}
+        {content.asignacion && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <InfoCantidadSvgIcon width={22} height={20} />
+            <span>Camión: {content.asignacion}</span>
           </div>
         )}
       </div>
