@@ -126,15 +126,9 @@ const SimulationMap: React.FC = () => {
   const minutoActualData = useMemo(() => {
     return minutoActualIdx === -1 ? null : historial[minutoActualIdx];
   }, [historial, minutoActualIdx]);
-/*
   const getPixelCoords = (pos: Position) => ({
     x: pos.x * cellSize + cellSize / 2,
     y: (gridSize.alto - 1 - pos.y) * cellSize + cellSize / 2,
-  });
-*/
-  const getPixelCoords = (pos: Position) => ({
-    x: pos.x * cellSize * scale + (cellSize * scale) / 2,
-    y: (gridSize.alto - 1 - pos.y) * cellSize * scale + (cellSize * scale) / 2,
   });
 
 
@@ -485,8 +479,8 @@ const SimulationMap: React.FC = () => {
               opacity={1.0}
               onClick={() =>
                 setInfoBox({
-                  x: p.posicion.x * cellSize * scale + cellSize / 2,
-                  y: (gridSize.alto - 1 - p.posicion.y) * cellSize * scale + cellSize / 2,
+                  x: p.posicion.x * cellSize + cellSize / 2,
+                  y: (gridSize.alto - 1 - p.posicion.y) * cellSize + cellSize / 2,
                   visible: true,
                   contenido: {
                     id: 'Pedido ' + p.idPedido,
