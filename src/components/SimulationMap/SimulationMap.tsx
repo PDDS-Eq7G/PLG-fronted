@@ -186,6 +186,9 @@ const SimulationMap: React.FC = () => {
 
     setRutasPorCamion((prev) => {
       const nuevas = { ...prev };
+      const codigosActuales = new Set(
+        minutoActualData.camiones.map((c) => c.codigo)
+      );
       minutoActualData.camiones.forEach(({ codigo, posicion, estado }) => {
         const prevRuta = nuevas[codigo] || [];
         if (
@@ -212,6 +215,12 @@ const SimulationMap: React.FC = () => {
           }
         }
       });
+
+      Object.keys(nuevas).forEach((codigo) => {
+        if (!codigosActuales.has(codigo)) {
+          delete nuevas[codigo];
+        }
+      });
       return nuevas;
     });
   }, [minutoActualIdx, minutoActualData]);
@@ -234,12 +243,16 @@ const SimulationMap: React.FC = () => {
       estado === 'AVERIADO' ||
       (estado !== 'OCUPADO' && pos.x === almacenPos.x && pos.y === almacenPos.y);
 
-    const nuevas: Record<string, Position[]> = {};
+    setRutasPendientesPorCamion((prev) => {
+      const nuevas: Record<string, Position[]> = { ...prev };
+      const codigosActuales = new Set(
+        minutoActualData.camiones.map((c) => c.codigo)
+      );
 
-    minutoActualData.camiones.forEach(({ codigo, posicion }) => {
-      const futuros: Position[] = [];
-      let prevStep = posicion;
-      for (let idx = minutoActualIdx + 1; idx < historial.length; idx++) {
+      minutoActualData.camiones.forEach(({ codigo, posicion }) => {
+        const futuros: Position[] = [];
+        let prevStep = posicion;
+        for (let idx = minutoActualIdx + 1; idx < historial.length; idx++) {
         const data = historial[idx];
         if (!('camiones' in data)) continue;
         const fut = data.camiones.find(c => c.codigo === codigo);
@@ -261,10 +274,17 @@ const SimulationMap: React.FC = () => {
           break;
         }
       }
-      nuevas[codigo] = [posicion, ...futuros];
-    });
+        nuevas[codigo] = [posicion, ...futuros];
+      });
 
-    setRutasPendientesPorCamion(nuevas);
+      Object.keys(nuevas).forEach((codigo) => {
+        if (!codigosActuales.has(codigo)) {
+          delete nuevas[codigo];
+        }
+      });
+
+      return nuevas;
+    });
   }, [minutoActualIdx, historial, almacenPos, minutoActualData]);
 
   type PedidoConTiempo = Pedido & { minutoDesaparicion: string };
