@@ -584,11 +584,6 @@ const SimulationMap: React.FC = () => {
             />
           )}
         </div>
-        <div className="zoom-controls">
-          <button className="zoom-button" onClick={() => setUserScale(s => Math.min(s + 0.1, 3))}>+</button>
-          <span className="zoom-label">{Math.round(userScale * autoScale * 100)}%</span>
-          <button className="zoom-button" onClick={() => setUserScale(s => Math.max(0.5, s - 0.1))}>-</button>
-        </div>
 
         <ModalResumenEjecucion isOpen={isModalOpen} onClose={handleCloseModal}>
           <>
@@ -605,6 +600,11 @@ const SimulationMap: React.FC = () => {
         </ModalResumenEjecucion>
 
         {isLegendOpen && <LegendFloatingBox onClose={() => setIsLegendOpen(false)} />}
+        <div className="zoom-controls">
+          <button className="zoom-button" onClick={() => setUserScale(s => Math.min(s + 0.1, 3))}>+</button>
+          <span className="zoom-label">{Math.round(userScale * autoScale * 100)}%</span>
+          <button className="zoom-button" onClick={() => setUserScale(s => Math.max(0.5, s - 0.1))}>-</button>
+        </div>
         </div>
       </div>
     </div>
