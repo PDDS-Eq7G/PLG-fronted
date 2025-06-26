@@ -605,7 +605,7 @@ const SimulationMap: React.FC = () => {
           <span className="zoom-label">{Math.round(userScale * autoScale * 100)}%</span>
           <button className="zoom-button" onClick={() => setUserScale(s => Math.max(0.5, s - 0.1))}>-</button>
         </div>
-        </div>
+      </div>
       </div>
     </div>
   );
