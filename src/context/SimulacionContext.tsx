@@ -88,7 +88,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
   now.setSeconds(0);
   now.setMilliseconds(0);
   const [fechaInicio, setFechaInicio] = useState<Date | null>(now); // Set to current time rounded to the nearest minute
-  const maxIteraciones = tipoSimulacion === "SEMANAL" ? Number(169) : undefined;
+  const maxIteraciones = tipoSimulacion === "SEMANAL" ? Number(673) : undefined;
   const [simulacionBackendFinalizada, setSimulacionBackendFinalizada] = useState(false);
   const simulacionIdRef = useRef<string>(uuidv4());
 
