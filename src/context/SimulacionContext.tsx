@@ -100,6 +100,12 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
   const minSpeed = 100; // ms (Faster speed)
   const maxSpeed = 2000; // ms (Slower speed)
 
+  const velocidadRealRef = useRef(velocidadReal);
+
+  useEffect(() => {
+    velocidadRealRef.current = velocidadReal;
+  }, [velocidadReal]);
+
   /*useEffect(() => {
     if (!isSimulando && tipoSimulacion === 'DIA_A_DIA' && historial.length === 0) {
       const fechaActual = new Date()
@@ -161,10 +167,10 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
 
       const fechaInicioParam = fechaSinZona(fechaInicio);
 
-      console.log(`Simulación: Llamando a iteración ${nLlamadaRef.current}`);
-      console.log(`Velocidad: ${velocidad} ms`);
-      console.log(`Fecha de inicio: ${fechaInicioParam}`);
-      console.log(`Estado de simulación: ${isSimulando}`);
+      //console.log(`Simulación: Llamando a iteración ${nLlamadaRef.current}`);
+      //console.log(`Velocidad: ${velocidad} ms`);
+      //console.log(`Fecha de inicio: ${fechaInicioParam}`);
+      //console.log(`Estado de simulación: ${isSimulando}`);
       try {
         const endpoint =
           tipoSimulacion === 'COLAPSO'
@@ -243,8 +249,9 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
               const milisRestantes = segundosRestantes * 1000 - ahora.getMilliseconds();
               delay = esRespuestaInstantanea ? 100 : milisRestantes;
             } else {
-              delay = esRespuestaInstantanea ? 100 : 15 * velocidad;
+              delay = esRespuestaInstantanea ? 100 : 15 * velocidadRealRef.current;
             }
+            console.log(`Delay: ${delay}`);
             timeoutId = setTimeout(() => hacerLlamadaAPI(currentExecution), delay);
         }
 
@@ -275,13 +282,13 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     let interval: NodeJS.Timeout | undefined;
-    console.log(`Efecto de reloj de simulación: isSimulando=${isSimulando}, velocidad=${velocidad}, finSimulacion=${finSimulacion}, historial.length=${historial.length}`);
+    //console.log(`Efecto de reloj de simulación: isSimulando=${isSimulando}, velocidad=${velocidad}, finSimulacion=${finSimulacion}, historial.length=${historial.length}`);
     // The clock runs if simulation is active, not finished *from backend*, and there's history data to display
     if (isSimulando && !finSimulacion && historial.length > 0) {
       const ahora = new Date();
       const msHastaProximoMinuto = 60000 - (ahora.getSeconds() * 1000 + ahora.getMilliseconds());
-      console.log(`Iniciando intervalo de simulación con velocidad: ${velocidad} ms`);
-      console.log(`Esperando ${msHastaProximoMinuto}ms para sincronizar con el siguiente minuto.`);
+      //console.log(`Iniciando intervalo de simulación con velocidad: ${velocidad} ms`);
+      //console.log(`Esperando ${msHastaProximoMinuto}ms para sincronizar con el siguiente minuto.`);
       if (tipoSimulacion === 'DIA_A_DIA') {
         timeout = setTimeout(() => {
           setMinutoActualIdx(prev => Math.min(prev + 1, historial.length - 1)); // Avanza una vez al empezar
@@ -303,7 +310,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
           setMinutoActualIdx((prevIdx: number) => {
             // Si ya estamos en el último minuto disponible,
             // simplemente quédate ahí hasta que el historial crezca.
-            console.log(`Avanzando minuto actual: ${prevIdx} de ${historial.length - 1}`);
+            //console.log(`Avanzando minuto actual: ${prevIdx} de ${historial.length - 1}`);
             if (prevIdx >= historial.length - 1) {
               return prevIdx;
             }
