@@ -97,7 +97,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
   const currentFetchControllerRef = useRef<AbortController | null>(null); // Para abortar peticiones
   const executionIdRef = useRef(0); // Para manejar reinicios de simulación
 
-  const minSpeed = 100; // ms (Faster speed)
+  const minSpeed = tipoSimulacion !== "COLAPSO" ? 100 : 500; // ms (Faster speed)
   const maxSpeed = 2000; // ms (Slower speed)
 
   const velocidadRealRef = useRef(velocidadReal);
