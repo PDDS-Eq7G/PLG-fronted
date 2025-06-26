@@ -228,9 +228,11 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
               return nuevoHistorial;
             });*/
           }
+
+          setNLlamada((prev) => prev + 1);
         }
 
-        setNLlamada((prev) => prev + 1);
+        //setNLlamada((prev) => prev + 1);
 
         // Si la simulación aún debe continuar, programar la próxima llamada
         if (isSimulando && !controller.signal.aborted) { // isSimulando debe seguir siendo true aquí
