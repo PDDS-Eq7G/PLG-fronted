@@ -12,6 +12,7 @@ import PedidoMarker from '../../icons/PedidoMarker';
 import FloatingInfoBox, { InfoBoxContent } from '../FloatingInfoBox/FloatingInfoBox';
 import { LegendFloatingBox } from '../FloatingInfoBox/LegendFloatingBox';
 import { set } from 'date-fns';
+import TanqueIntermedioMarker from '../../icons/TanqueIntermedioMarker';
 interface Position { x: number; y: number; }
 interface Truck { codigo: string; posicion: Position; }
 interface Pedido { idPedido: string; posicion: Position; estado?: string; fechaLlegada?: string; }
@@ -374,6 +375,16 @@ const SimulationMap: React.FC = () => {
     return { currentGrid: newGrid, currentFlota: flota };
   }, [minutoActualData, baseGrid, gridSize]);
 
+  const tanquesInfo = useMemo(() => {
+    if (!minutoActualData || !('minuto' in minutoActualData)) {
+      return [];
+    }
+
+    const tanquesIntermedios = minutoActualData.tanquesIntermedios ?? [];
+
+    return tanquesIntermedios;
+  }, [minutoActualIdx, minutoActualData]);
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setConsumoFinal(null);
@@ -495,7 +506,40 @@ const SimulationMap: React.FC = () => {
             </svg>
           ))}
 
-          {pedidosConDatos.map((p) => (
+          {tanquesInfo.map((tanque) => (
+            <TanqueIntermedioMarker
+              x={tanque.posicion.x}
+              y={tanque.posicion.y}
+              cellSize={cellSize}
+              gridSizeY={gridSize.alto}
+              opacity={1.0}
+              onClick={() =>
+                setInfoBox({
+                  x: tanque.posicion.x * cellSize + cellSize / 2,
+                  y: (gridSize.alto - 1 - tanque.posicion.y) * cellSize + cellSize / 2,
+                  visible: true,
+                  contenido: {
+                    tipo: 'tanque',
+                    ubicacion: `(${tanque.posicion.x}, ${tanque.posicion.y})`,
+                    capacidad: tanque.capacidadActual + "/" + tanque.capacidadMaxima + " (" + Math.round(100.0 * (tanque.capacidadActual / tanque.capacidadMaxima)) + "%)",
+                  },
+                })
+              }
+            />
+          ))}
+
+          {pedidosConDatos.map((p) => {
+            // Busca los detalles completos del pedido en el minuto actual para obtener las asignaciones
+            const detallesPedido = minutoActualData?.pedidos.find(
+              (pedidoDetalle) => pedidoDetalle.idPedido === p.idPedido
+            );
+
+            // Obtiene los códigos de los camiones asignados y los une en un string
+            const camionesAsignados = detallesPedido?.asignacion
+              ? Object.keys(detallesPedido.asignacion).join(', ')
+              : '';
+            
+            return (
             <PedidoMarker
               key={`pendiente-${p.idPedido}`}
               id={"P" + String(p.idPedido).padStart(5, '0')}
@@ -517,11 +561,12 @@ const SimulationMap: React.FC = () => {
                     ubicacion: `(${p.posicion.x}, ${p.posicion.y})`,
                     llegada: p.fechaLlegada,
                     cantidad: p.cantidad,
+                    camionAsignado: camionesAsignados,
                   },
                 })
               }
             />
-          ))}
+          )})}
 
           {Object.values(pedidosEntregadosVisibles).map((p) => (
             <PedidoMarker
@@ -541,7 +586,23 @@ const SimulationMap: React.FC = () => {
               // Ocultar si la posición del camión coincide con la del almacén central
               return !(almacenPos && camion.posicion.x === almacenPos.x && camion.posicion.y === almacenPos.y);
             })
-            .map((camion) => (
+            .map((camion) => {
+
+              // Buscar el pedido y la cantidad asignada al camión actual
+              let pedidoAsignado = '';
+              let cantidadAsignada = 0;
+
+              if (minutoActualData && 'pedidos' in minutoActualData) {
+                for (const pedido of minutoActualData.pedidos) {
+                  if (pedido.asignacion && pedido.asignacion[camion.codigo]) {
+                    pedidoAsignado = "P" + String(pedido.idPedido).padStart(5, '0');
+                    cantidadAsignada = pedido.asignacion[camion.codigo].cantidadAsignada;
+                    break;
+                  }
+                }
+              }
+
+              return (
               <div
                 key={camion.codigo}
                 onClick={() => setInfoBox({
@@ -553,7 +614,8 @@ const SimulationMap: React.FC = () => {
                     tipo: 'camion',
                     color: getColorForTruck(camion.codigo),
                     estado: camion.estado,
-                    pedido: '',
+                    pedido: pedidoAsignado,
+                    cantidadAsignada: cantidadAsignada,
                     llegada: '',
                     capacidad: camion.cargaActual + "/" + camion.capacidadMaxima + " (" + Math.round(100.0 * (camion.cargaActual / camion.capacidadMaxima)) + "%)",
                   },
@@ -570,7 +632,7 @@ const SimulationMap: React.FC = () => {
                   estado={camion.estado}
                 />
               </div>
-          ))}
+          )})}
 
           {infoBox && (
             <FloatingInfoBox

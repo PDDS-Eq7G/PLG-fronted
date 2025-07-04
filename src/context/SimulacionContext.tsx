@@ -29,6 +29,11 @@ export interface HistorialMinuto {
     posicion: { x: number; y: number };
     idPedido: string;
   }[];
+  tanquesIntermedios: {
+    posicion: { x: number; y: number };
+    capacidadActual: number;
+    capacidadMaxima: number;
+  }[];
 }
 
 export interface AsignacionDetalle {
@@ -293,7 +298,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
       //console.log(`Iniciando intervalo de simulación con velocidad: ${velocidad} ms`);
       //console.log(`Esperando ${msHastaProximoMinuto}ms para sincronizar con el siguiente minuto.`);
       if (tipoSimulacion === 'DIA_A_DIA') {
-        timeout = setTimeout(() => {
+        /*timeout = setTimeout(() => {
           setMinutoActualIdx(prev => Math.min(prev + 1, historial.length - 1)); // Avanza una vez al empezar
 
           interval = setInterval(() => {
@@ -302,6 +307,19 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
               return next >= historial.length ? prev : next; // Avanza un minuto, pero no sobrepasa el límite
             });
           }, velocidad); // velocidad = 60000 para un minuto
+        }, msHastaProximoMinuto);*/
+
+        // Mostrar inmediatamente el siguiente minuto si hay uno nuevo
+        setMinutoActualIdx(prev => Math.min(prev + 1, historial.length - 1));
+
+        // Luego sincronizar con el próximo minuto real para continuar
+        timeout = setTimeout(() => {
+          interval = setInterval(() => {
+            setMinutoActualIdx(prev => {
+              const next = prev + 1;
+              return next >= historial.length ? prev : next;
+            });
+          }, velocidad);
         }, msHastaProximoMinuto);
 
         return () => {

@@ -8,6 +8,7 @@ import InfoCalendarioSvgIcon from '../../icons/InfoCalendarioSvgIcon';
 import InfoCapacidadSvgIcon from '../../icons/InfoCapacidadSvgIcon';
 import InfoUbicacionSvgIcon from '../../icons/InfoUbicacionSvgIcon';
 import InfoCantidadSvgIcon from '../../icons/InfoCantidadSvgIcon';
+import TanqueIntermedioIcon from '../../icons/TanqueIntermedioIcon';
 
 function formatearFecha(fechaStr: string): string {
   const fecha = new Date(fechaStr);
@@ -22,15 +23,17 @@ function formatearFecha(fechaStr: string): string {
 }
 
 export interface InfoBoxContent {
-  id: string;
-  tipo: 'camion' | 'pedido' | 'almacen' | string;
+  id?: string;
+  tipo: 'camion' | 'pedido' | 'tanque' | string;
   color?: string;
   estado?: string;
   pedido?: string;
   llegada?: string;
   capacidad?: string;
   ubicacion?: string;
-  asignacion?: string;
+  camionAsignado?: string;
+  cantidad?: number;
+  cantidadAsignada?: number;
   [key: string]: any;
 }
 
@@ -96,7 +99,7 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
   const iconMap: Record<string, JSX.Element> = {
     camion: <TruckSvgIcon width={20} height={20} color={content.color || '#D300DE'} />,
     pedido: <InfoPedidoSvgIcon width={20} height={20} />,
-    almacen: <FaWarehouse color="#4caf50" />,
+    tanque: <TanqueIntermedioIcon width={20} height={20} />,
   };
 
   return (
@@ -150,35 +153,36 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
       </div>
 
       {/* Body */}
-      <div style={{ padding: '8px 12px' }}>
+      <div 
+        style={{ 
+          padding: '10px 14px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '8px'
+        }}
+      >
         {content.estado && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <InfoStatusSvgIcon width={22} height={20} />
             <span>Estado: {content.estado}</span>
           </div>
         )}
         {content.ubicacion && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <InfoUbicacionSvgIcon width={22} height={20} />
             <span>Ubicación: {content.ubicacion}</span>
           </div>
         )}
         {content.pedido && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <InfoPedidoSvgIcon width={22} height={20} />
             <span>Pedido: {content.pedido}</span>
           </div>
         )}
-        {content.llegada && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 6 }}>
-            <InfoCalendarioSvgIcon width={22} height={20} />
-            <span>Llegada: {formatearFecha(content.llegada)}</span>
-          </div>
-        )}
-        {content.capacidad && (
+        {content.camionAsignado && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <InfoCapacidadSvgIcon width={22} height={20} />
-            <span>Capacidad (m<sup>3</sup>): {content.capacidad}</span>
+            <TruckSvgIcon width={22} height={20} />
+            <span>Camión: {content.camionAsignado}</span>
           </div>
         )}
         {content.cantidad && (
@@ -187,10 +191,22 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
             <span>Cantidad: {content.cantidad}</span>
           </div>
         )}
-        {content.asignacion && (
+        {content.cantidadAsignada !== undefined && content.cantidadAsignada > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <InfoCantidadSvgIcon width={22} height={20} />
-            <span>Camión: {content.asignacion}</span>
+            <span>Cant. Asignada: {content.cantidadAsignada}</span>
+          </div>
+        )}
+        {content.capacidad && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <InfoCapacidadSvgIcon width={22} height={20} />
+            <span>Capacidad (m<sup>3</sup>): {content.capacidad}</span>
+          </div>
+        )}
+        {content.llegada && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <InfoCalendarioSvgIcon width={22} height={20} />
+            <span>Llegada: {formatearFecha(content.llegada)}</span>
           </div>
         )}
       </div>
