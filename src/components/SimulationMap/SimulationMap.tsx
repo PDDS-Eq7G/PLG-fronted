@@ -519,6 +519,7 @@ const SimulationMap: React.FC = () => {
                   y: (gridSize.alto - 1 - tanque.posicion.y) * cellSize + cellSize / 2,
                   visible: true,
                   contenido: {
+                    id: 'Tanque intermedio',
                     tipo: 'tanque',
                     ubicacion: `(${tanque.posicion.x}, ${tanque.posicion.y})`,
                     capacidad: tanque.capacidadActual + "/" + tanque.capacidadMaxima + " (" + Math.round(100.0 * (tanque.capacidadActual / tanque.capacidadMaxima)) + "%)",
