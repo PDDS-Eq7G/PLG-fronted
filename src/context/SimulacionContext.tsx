@@ -106,11 +106,16 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
   const minSpeed = 100;
   const maxSpeed = 2000; // ms (Slower speed)
 
+  const velocidadRef = useRef(velocidad);
   const velocidadRealRef = useRef(velocidadReal);
 
   useEffect(() => {
     velocidadRealRef.current = velocidadReal;
   }, [velocidadReal]);
+
+  useEffect(() => {
+    velocidadRef.current = velocidad;
+  }, [velocidad]);
 
   /*useEffect(() => {
     if (!isSimulando && tipoSimulacion === 'DIA_A_DIA' && historial.length === 0) {
@@ -249,18 +254,39 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
             'duracionEjecucion' in data[0] &&
             data[0].duracionEjecucion === 0;
           
-            //const delay = esRespuestaInstantanea ? 100 : 15000; // 100ms si rápida, 15s si no
-            let delay;
-            if (tipoSimulacion === 'DIA_A_DIA') {
+          //const delay = esRespuestaInstantanea ? 100 : 15000; // 100ms si rápida, 15s si no
+          /*let delay;
+          if (tipoSimulacion === 'DIA_A_DIA') {
+            const ahora = new Date();
+            const segundosRestantes = 60 - ahora.getSeconds();
+            const milisRestantes = segundosRestantes * 1000 - ahora.getMilliseconds();
+            delay = esRespuestaInstantanea ? 100 : milisRestantes;
+          } else {
+            delay = esRespuestaInstantanea ? 100 : 15 * velocidadRealRef.current;
+          }
+          console.log(`Delay: ${delay}`);
+          timeoutId = setTimeout(() => hacerLlamadaAPI(currentExecution), delay);*/
+          
+          let delay;
+          if (tipoSimulacion === 'DIA_A_DIA') {
               const ahora = new Date();
               const segundosRestantes = 60 - ahora.getSeconds();
               const milisRestantes = segundosRestantes * 1000 - ahora.getMilliseconds();
               delay = esRespuestaInstantanea ? 100 : milisRestantes;
-            } else {
-              delay = esRespuestaInstantanea ? 100 : 15 * velocidadRealRef.current;
-            }
-            console.log(`Delay: ${delay}`);
-            timeoutId = setTimeout(() => hacerLlamadaAPI(currentExecution), delay);
+          } else {
+              const nuevosMinutosRecibidos = data.filter((d: any) => 'minuto' in d).length;
+
+              if (esRespuestaInstantanea || nuevosMinutosRecibidos === 0) {
+                  delay = 100; // Reintento rápido si no hay datos nuevos
+              } else {
+                  const tiempoDeReproduccion = nuevosMinutosRecibidos * velocidadRef.current;
+                  delay = tiempoDeReproduccion;
+                  
+                  console.log(`Simulación Semanal: Recibidos ${nuevosMinutosRecibidos} minutos. Próxima llamada programada en ${delay}ms (velocidad actual: ${velocidadRef.current}ms/minuto)`);
+              }
+          }
+          console.log(`Delay: ${delay}`);
+          timeoutId = setTimeout(() => hacerLlamadaAPI(currentExecution), delay);
         }
 
       } catch (error: any) {
@@ -360,6 +386,29 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
       }
     }
   }, [isSimulando, velocidad, historial.length, finSimulacion]); // Depend on relevant state changes
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // When the tab becomes visible again...
+      if (document.visibilityState === 'visible' && isSimulando) {
+        console.log('Tab is visible again. Synchronizing simulation state.');
+        
+        // Check if there's new data that hasn't been displayed yet
+        if (historial.length > 0 && minutoActualIdx < historial.length - 1) {
+          // Fast-forward to the latest available minute in the history
+          setMinutoActualIdx(historial.length - 1);
+        }
+      }
+    };
+
+    // Add the event listener
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup function to remove the event listener
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isSimulando, historial, minutoActualIdx]);
 
   // Optional: Add a comprehensive reset function to the context
   // This can be called from any consumer (e.g., ControlDeMandoCompleto, SimulationMap)
