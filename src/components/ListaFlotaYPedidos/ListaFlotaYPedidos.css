@@ -92,7 +92,7 @@
 
 /* Contenido de las pestañas */
 .tab-content-list {
-  max-height: 400px;
+  max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
 }
