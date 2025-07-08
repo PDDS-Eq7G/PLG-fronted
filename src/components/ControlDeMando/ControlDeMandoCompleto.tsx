@@ -30,6 +30,7 @@ const ControlDeMandoCompleto: React.FC = () => {
     maxIteraciones,
     resetSimulationState,
     tipoSimulacion,
+    tiempoTranscurrido,
   } = useSimulacion();
 
   const tiempoSimulado = useMemo(() => {
@@ -85,6 +86,9 @@ const ControlDeMandoCompleto: React.FC = () => {
       </div>
       <div className="panel-section">
         <strong>Fecha y hora (simulación): </strong> {tiempoSimulado}
+      </div>
+      <div className="panel-section">
+        <strong>Tiempo transcurrido: </strong> {tiempoTranscurrido}
       </div>
     </div>
   );

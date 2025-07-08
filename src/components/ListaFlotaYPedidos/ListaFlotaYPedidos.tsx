@@ -5,12 +5,17 @@ import "./ListaFlotaYPedidos.css";
 export enum TabType {
   FLOTA = "flota",
   PEDIDOS = "pedidos",
+  TANQUES = "tanques",
 }
 
 interface FlotaData {
   codigo: string;
   posicion: string;
   capacidad: string;
+  estado: string;
+  cargaActualFlota: number;
+  capacidadMaximaFlota: number;
+  asignacion?: string;
 }
 
 interface PedidosData {
@@ -18,6 +23,14 @@ interface PedidosData {
   posicion: string;
   cantidad: string;
   fecha: string;
+  fechaLimite: string;
+  rawFechaLimite?: number;
+  asignacion?: string;
+}
+
+interface TanquesData {
+  posicion: string;
+  capacidad: string;
 }
 
 interface ListaFlotaYPedidosProps {
@@ -27,41 +40,6 @@ interface ListaFlotaYPedidosProps {
   defaultTab?: TabType;
   disabled?: boolean;
 }
-
-/*const defaultFlotaData: FlotaData[] = [
-  { codigo: "TA01", posicion: "(16, 10)", capacidad: "10/25 (40%)" },
-  { codigo: "TA02", posicion: "(24, 17)", capacidad: "11/25 (44%)" },
-  { codigo: "TA03", posicion: "(7, 22)", capacidad: "3/25 (12%)" },
-  { codigo: "TA04", posicion: "(42, 20)", capacidad: "1/25 (4%)" },
-  { codigo: "TA05", posicion: "(28, 36)", capacidad: "7/25 (28%)" },
-  { codigo: "TB01", posicion: "(19, 30)", capacidad: "19/25 (76%)" },
-  { codigo: "TB02", posicion: "(32, 29)", capacidad: "13/25 (52%)" },
-  { codigo: "TB03", posicion: "(36, 11)", capacidad: "25/25 (100%)" },
-  { codigo: "TB04", posicion: "(7, 40)", capacidad: "15/25 (60%)" },
-  { codigo: "TD01", posicion: "(32, 30)", capacidad: "19/25 (76%)" },
-  { codigo: "TD02", posicion: "(41, 15)", capacidad: "12/25 (48%)" },
-  { codigo: "TD03", posicion: "(14, 28)", capacidad: "19/25 (76%)" },
-  { codigo: "TD04", posicion: "(5, 23)", capacidad: "12/25 (48%)" },
-  { codigo: "TD05", posicion: "(44, 3)", capacidad: "15/25 (60%)" },
-];
-
-const defaultPedidosData: PedidosData[] = [
-  { codigo: "P001", posicion: "(16, 10)", fecha: "09/05 14:30" },
-  { codigo: "P002", posicion: "(24, 17)", fecha: "09/05 15:30" },
-  { codigo: "P003", posicion: "(7, 22)", fecha: "09/05 15:45" },
-  { codigo: "P004", posicion: "(42, 20)", fecha: "09/05 16:10" },
-  { codigo: "P005", posicion: "(28, 36)", fecha: "09/05 16:15" },
-  { codigo: "P006", posicion: "(19, 30)", fecha: "09/05 14:24" },
-  { codigo: "P007", posicion: "(32, 29)", fecha: "09/05 17:30" },
-  { codigo: "P008", posicion: "(36, 11)", fecha: "09/05 19:24" },
-  { codigo: "P009", posicion: "(7, 40)", fecha: "09/05 18:15" },
-  { codigo: "P010", posicion: "(32, 30)", fecha: "09/05 11:34" },
-  { codigo: "P011", posicion: "(41, 15)", fecha: "09/05 12:30" },
-  { codigo: "P012", posicion: "(14, 28)", fecha: "09/05 17:04" },
-  { codigo: "P013", posicion: "(5, 23)", fecha: "09/05 16:54" },
-  { codigo: "P014", posicion: "(44, 3)", fecha: "09/05 17:18" },
-  { codigo: "P015", posicion: "(44, 3)", fecha: "09/05 18:31" },
-];*/
 
 const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
   onTabChange,
@@ -73,6 +51,7 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const { historial, minutoActualIdx } = useSimulacion();
+  const [ordenAscendente, setOrdenAscendente] = useState(true);
 
   const minutoActual = useMemo(() => {
     const item = historial[minutoActualIdx];
@@ -80,26 +59,94 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
     return null;
   }, [historial, minutoActualIdx]);
 
+  const camionesAsignacionMap = useMemo(() => {
+    const map = new Map<string, { pedidoId: string; cantidad: number }[]>();
+    if (minutoActual) {
+      minutoActual.pedidos.forEach(pedido => {
+        if (pedido.asignacion) {
+          Object.entries(pedido.asignacion).forEach(([codigoCamion, detalle]) => {
+            if (!map.has(codigoCamion)) {
+              map.set(codigoCamion, []);
+            }
+            map.get(codigoCamion)?.push({
+              pedidoId: "P" + String(pedido.idPedido).padStart(5, '0'), // Formatear el código del pedido
+              cantidad: detalle.cantidadAsignada,
+            });
+          });
+        }
+      });
+    }
+    return map;
+  }, [minutoActual]);
+
   const flotaData: FlotaData[] = useMemo(() => {
     if (!minutoActual) return [];
-    return minutoActual.camiones.map((camion) => ({
-      codigo: camion.codigo,
-      posicion: `(${camion.posicion.x}, ${camion.posicion.y})`,
-      capacidad: `${camion.cargaActual}/${camion.capacidadMaxima} m³ (${Math.round((camion.cargaActual / camion.capacidadMaxima) * 100)}%)`,
-    }));
+    return minutoActual.camiones.map((camion) => {
+      // Obtener asignaciones para este camión
+      const asignaciones = camionesAsignacionMap.get(camion.codigo);
+      let asignacionTexto = "Ninguno"; // Valor por defecto
+
+      if (asignaciones && asignaciones.length > 0) {
+        asignacionTexto = asignaciones
+          .map(a => `${a.pedidoId} (${a.cantidad})`)
+          .join(", ");
+      }
+
+      return {
+        codigo: camion.codigo,
+        posicion: `(${camion.posicion.x}, ${camion.posicion.y})`,
+        capacidad: `${camion.cargaActual}/${camion.capacidadMaxima} m³ (${Math.round((camion.cargaActual / camion.capacidadMaxima) * 100)}%)`,
+        estado: camion.estado,
+        cargaActualFlota: camion.cargaActual,
+        capacidadMaximaFlota: camion.capacidadMaxima,
+        asignacion: asignacionTexto,
+      }
+    });
   }, [minutoActual]);
+
+  const { totalCargaActualFlota, totalCapacidadMaximaFlota } = useMemo(() => {
+    let cargaActual = 0;
+    let capacidadMaxima = 0;
+
+    flotaData.forEach(camion => {
+      cargaActual += camion.cargaActualFlota;
+      capacidadMaxima += camion.capacidadMaximaFlota;
+    });
+
+    return {
+      totalCargaActualFlota: cargaActual,
+      totalCapacidadMaximaFlota: capacidadMaxima,
+    };
+   }, [flotaData]);
 
   const pedidosData: PedidosData[] = useMemo(() => {
     if (!minutoActual) return [];
-    return minutoActual.pedidosUbicacion.map((pedido) => {
+    const pedidos = minutoActual.pedidosUbicacion.map((pedido) => {
       const pedidoData = minutoActual.pedidos.find(
         (pu) => pu.idPedido === pedido.idPedido
       );
       
       const fechaLlegada = pedidoData?.fechaLlegada;
+      const fechaLimite = pedidoData?.fechaLimite;
 
       const cantidadPorEntregar = pedidoData?.cantidadPorEntregar;
       const cantidadTotal = pedidoData?.cantidadTotal;
+
+      // --- Lógica para asignación ---
+      let asignacionTexto = "N/A"; // Valor por defecto
+      if (pedidoData && pedidoData.asignacion) {
+        const asignaciones = Object.entries(pedidoData.asignacion);
+        if (asignaciones.length > 0) {
+          asignacionTexto = asignaciones
+            .map(([codigoCamion, detalle]) => {
+              // Asumiendo que 'detalle' tiene una propiedad 'cantidadAsignada'
+              return `${codigoCamion} (${detalle.cantidadAsignada})`;
+            })
+            .join(", ");
+        } else {
+          asignacionTexto = "Ninguno"; // Si hay propiedad pero está vacía
+        }
+      }
 
       return {
         codigo: "P"+String(pedido.idPedido).padStart(5, '0'),
@@ -112,7 +159,35 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
           hour: "2-digit",
           minute: "2-digit",
         }) : "N/A",
+        fechaLimite: fechaLimite ? new Date(fechaLimite).toLocaleString("es-PE", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        }) : "N/A",
+        rawFechaLimite: fechaLimite ? new Date(fechaLimite).getTime() : Infinity,
+        asignacion: asignacionTexto,
       };
+    });
+
+    // Ordenamiento
+    pedidos.sort((a, b) =>
+      ordenAscendente
+        ? a.rawFechaLimite - b.rawFechaLimite
+        : b.rawFechaLimite - a.rawFechaLimite
+    );
+
+    return pedidos;
+  }, [minutoActual, ordenAscendente]);
+
+  const tanquesData: TanquesData[] = useMemo(() => {
+    if (!minutoActual) return [];
+    return minutoActual.tanquesIntermedios.map((tanque) => {
+      return {
+        posicion: `(${tanque.posicion.x}, ${tanque.posicion.y})`,
+        capacidad: `${tanque.capacidadActual}/${tanque.capacidadMaxima} m³ (${Math.round((tanque.capacidadActual / tanque.capacidadMaxima) * 100)}%)`,
+      }
     });
   }, [minutoActual]);
 
@@ -138,6 +213,10 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  const paginatedTanquesData = tanquesData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const totalPages =
     activeTab === TabType.FLOTA
@@ -154,49 +233,97 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
 
   const renderFlotaTable = () => (
     <div className="table-container">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Posición</th>
-            <th>Capacidad</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedFlotaData.map((item, index) => (
-            <tr key={index}>
-              <td>{item.codigo}</td>
-              <td>{item.posicion}</td>
-              <td>{item.capacidad}</td>
+      <div className="flota-info">
+        <strong>Capacidad de la Flota: </strong> {totalCargaActualFlota}/{totalCapacidadMaximaFlota} m³
+        ({totalCapacidadMaximaFlota > 0 ? Math.round((totalCargaActualFlota / totalCapacidadMaximaFlota) * 100) : 0}%)
+      </div>
+      <div className="table-wrapper">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Posición</th>
+              <th>Capacidad</th>
+              <th>Estado</th>
+              <th>Asignación</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {paginatedFlotaData.map((item, index) => (
+              <tr key={index}>
+                <td>{item.codigo}</td>
+                <td>{item.posicion}</td>
+                <td>{item.capacidad}</td>
+                <td>{item.estado}</td>
+                <td>{item.asignacion}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 
   const renderPedidosTable = () => (
     <div className="table-container">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Posición</th>
-            <th>Cantidad por entregar</th>
-            <th>Fecha</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedPedidosData.map((item, index) => (
-            <tr key={index}>
-              <td>{item.codigo}</td>
-              <td>{item.posicion}</td>
-              <td>{item.cantidad}</td>
-              <td>{item.fecha}</td>
+      <div className="orden-toggle-container">
+        <button
+          className="orden-toggle-button"
+          onClick={() => setOrdenAscendente((prev) => !prev)}
+          disabled={disabled}
+        >
+          Fecha límite {ordenAscendente ? "↑" : "↓"}
+        </button>
+      </div>
+      <div className="table-wrapper">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Posición</th>
+              <th>Cantidad por entregar</th>
+              <th>Fecha llegada</th>
+              <th>Fecha límite</th>
+              <th>Asignación</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {paginatedPedidosData.map((item, index) => (
+              <tr key={index}>
+                <td>{item.codigo}</td>
+                <td>{item.posicion}</td>
+                <td>{item.cantidad}</td>
+                <td>{item.fecha}</td>
+                <td>{item.fechaLimite}</td>
+                <td>{item.asignacion}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderTanqueTable = () => (
+    <div className="table-container">
+      <div className="table-wrapper">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Posición</th>
+              <th>Capacidad</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedTanquesData.map((item, index) => (
+              <tr key={index}>
+                <td>{item.posicion}</td>
+                <td>{item.capacidad}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 
@@ -221,6 +348,15 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
         >
           Pedidos
         </button>
+        <button
+          className={`tab-button ${
+            activeTab === TabType.TANQUES ? "active" : ""
+          }`}
+          onClick={() => handleTabClick(TabType.TANQUES)}
+          disabled={disabled}
+        >
+          Tanques
+        </button>
       </div>
 
       <div className="search-container">
@@ -238,10 +374,12 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
         <div className="search-icon">🔍</div>
       </div>
 
-      <div className="tab-content">
+      <div className="tab-content-list">
         {activeTab === TabType.FLOTA
           ? renderFlotaTable()
-          : renderPedidosTable()}
+          : activeTab === TabType.PEDIDOS 
+            ? renderPedidosTable()
+            : renderTanqueTable()}
       </div>
 
       <div className="pagination-container">

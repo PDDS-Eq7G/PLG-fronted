@@ -77,11 +77,15 @@ interface SimulacionContextType {
   tipoSimulacion: String;
   simulacionBackendFinalizada: boolean;
   setSimulacionBackendFinalizada: React.Dispatch<React.SetStateAction<boolean>>;
+  tiempoTranscurrido: String;
 }
 
 const SimulacionContext = createContext<SimulacionContextType | undefined>(undefined);
 
 export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion: String }> = ({ children, tipoSimulacion }) => {
+  const [realStartTime, setRealStartTime] = useState<Date | null>(null);
+  const [tiempoTranscurrido, setTiempoTranscurrido] = useState<string>('00:00:00');
+  
   const [velocidad, setVelocidad] = useState(0);
   const velocidadRealInicial = tipoSimulacion === "DIA_A_DIA" ? 60000 : 1000; // Real-time speed for daily simulation, 1000 for weekly or collapse (1 minute per second)
   const [velocidadReal, setVelocidadReal] = useState(velocidadRealInicial);
@@ -135,6 +139,36 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
   useEffect(() => {
     nLlamadaRef.current = nLlamada;
   }, [nLlamada]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (isSimulando) {
+      if (!realStartTime) {
+        setRealStartTime(new Date()); // Guardamos hora de inicio
+      }
+
+      interval = setInterval(() => {
+        if (realStartTime) {
+          const now = new Date();
+          const diffMs = now.getTime() - realStartTime.getTime();
+
+          const hours = Math.floor(diffMs / (1000 * 60 * 60));
+          const minutes = Math.floor((diffMs / (1000 * 60)) % 60);
+          const seconds = Math.floor((diffMs / 1000) % 60);
+
+          const format = (n: number) => String(n).padStart(2, '0');
+          setTiempoTranscurrido(`${format(hours)}:${format(minutes)}:${format(seconds)}`);
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (interval !== undefined) {
+        clearInterval(interval);
+      }
+    };
+  }, [isSimulando, realStartTime]);
 
   useEffect(() => {
     // En cuanto haya al menos un minuto y aún no estamos mostrando ninguno…
@@ -426,6 +460,8 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
     setFinSimulacion(false); // Crucial for new simulations
     setFechaInicio(new Date());
     setSimulacionBackendFinalizada(false);
+    setTiempoTranscurrido('00:00:00');
+    setRealStartTime(null);
 
     fetch(`${API_URL}/planificador/reiniciar?simulacionId=${simulacionIdRef.current}`, { credentials: 'include' })
       .then(() => console.log('Simulación reiniciada en backend'))
@@ -458,6 +494,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
         tipoSimulacion,
         simulacionBackendFinalizada,
         setSimulacionBackendFinalizada,
+        tiempoTranscurrido,
       }}
     >
       {children}
