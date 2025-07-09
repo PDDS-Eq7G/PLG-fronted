@@ -1,5 +1,5 @@
 // src/components/FloatingInfoBox/FloatingInfoBox.tsx
-import React, { JSX, useEffect, useRef, useState } from 'react';
+import React, { JSX, useEffect, useRef, useState, useMemo } from 'react';
 import { FaTimes, FaTruck, FaCubes, FaCalendarAlt, FaBatteryHalf, FaWarehouse } from 'react-icons/fa';
 import TruckSvgIcon from '../../icons/TruckSvgIcon';
 import InfoStatusSvgIcon from '../../icons/InfoStatusSvgIcon';
@@ -65,6 +65,20 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
   const isDragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
   const boxRef = useRef<HTMLDivElement>(null);
+
+  const rutaUnica = useMemo(() => {
+    const ruta = content.rutaPlanificada ?? [];
+    const seen = new Set<string>();
+    const unique: { x: number; y: number }[] = [];
+    for (const p of ruta) {
+      const key = `${p.x},${p.y}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(p);
+      }
+    }
+    return unique;
+  }, [content.rutaPlanificada]);
 
   useEffect(() => {
     if (!isDragging.current) setPos({ x, y });
@@ -211,16 +225,18 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
             <span>Llegada: {formatearFecha(content.llegada)}</span>
           </div>
         )}
-        {content.rutaPlanificada && content.rutaPlanificada.length > 0 && (
+        {rutaUnica.length > 0 && (
           <>
             <button
               style={{
                 marginTop: '4px',
                 alignSelf: 'flex-start',
-                background: '#f5f5f5',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                padding: '2px 6px',
+                backgroundColor: 'rgba(240, 238, 238, 0.3)',
+                border: '1px solid #D0E9F9',
+                borderRadius: '20px',
+                padding: '4px 10px',
+                color: '#005CD2',
+                fontSize: '0.8rem',
                 cursor: 'pointer',
               }}
               onClick={() => setShowRuta((s) => !s)}
@@ -238,9 +254,15 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
                   width: '100%',
                 }}
               >
-                {content.rutaPlanificada.map((p, idx) => (
-                  <div key={idx}>
-                    ({p.x}, {p.y})
+                {rutaUnica.map((p, idx) => (
+                  <div
+                    key={idx}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <InfoUbicacionSvgIcon width={12} height={12} />
+                    <span>
+                      ({p.x}, {p.y})
+                    </span>
                   </div>
                 ))}
               </div>
