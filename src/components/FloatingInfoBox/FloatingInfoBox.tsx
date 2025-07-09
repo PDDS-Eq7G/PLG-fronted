@@ -1,5 +1,5 @@
 // src/components/FloatingInfoBox/FloatingInfoBox.tsx
-import React, { JSX, useEffect, useRef, useState } from 'react';
+import React, { JSX, useEffect, useRef, useState, useMemo } from 'react';
 import { FaTimes, FaTruck, FaCubes, FaCalendarAlt, FaBatteryHalf, FaWarehouse } from 'react-icons/fa';
 import TruckSvgIcon from '../../icons/TruckSvgIcon';
 import InfoStatusSvgIcon from '../../icons/InfoStatusSvgIcon';
@@ -34,6 +34,7 @@ export interface InfoBoxContent {
   camionAsignado?: string;
   cantidad?: number;
   cantidadAsignada?: number;
+  rutaPlanificada?: { x: number; y: number }[];
   [key: string]: any;
 }
 
@@ -48,7 +49,7 @@ interface FloatingInfoBoxProps {
 }
 
 const BOX_WIDTH = 250;
-const BOX_HEIGHT = 140;
+const BOX_HEIGHT = 220;
 
 const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
   x,
@@ -60,9 +61,24 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
   containerHeight,
 }) => {
   const [pos, setPos] = useState({ x, y });
+  const [showRuta, setShowRuta] = useState(false);
   const isDragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
   const boxRef = useRef<HTMLDivElement>(null);
+
+  const rutaUnica = useMemo(() => {
+    const ruta = content.rutaPlanificada ?? [];
+    const seen = new Set<string>();
+    const unique: { x: number; y: number }[] = [];
+    for (const p of ruta) {
+      const key = `${p.x},${p.y}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(p);
+      }
+    }
+    return unique;
+  }, [content.rutaPlanificada]);
 
   useEffect(() => {
     if (!isDragging.current) setPos({ x, y });
@@ -208,6 +224,50 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
             <InfoCalendarioSvgIcon width={22} height={20} />
             <span>Llegada: {formatearFecha(content.llegada)}</span>
           </div>
+        )}
+        {rutaUnica.length > 0 && (
+          <>
+            <button
+              style={{
+                marginTop: '4px',
+                alignSelf: 'flex-start',
+                backgroundColor: 'rgba(240, 238, 238, 0.3)',
+                border: '1px solid #D0E9F9',
+                borderRadius: '20px',
+                padding: '4px 10px',
+                color: '#005CD2',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+              }}
+              onClick={() => setShowRuta((s) => !s)}
+            >
+              Ruta planificada
+            </button>
+            {showRuta && (
+              <div
+                style={{
+                  maxHeight: '100px',
+                  overflowY: 'auto',
+                  marginTop: '4px',
+                  border: '1px solid #eee',
+                  padding: '4px',
+                  width: '100%',
+                }}
+              >
+                {rutaUnica.map((p, idx) => (
+                  <div
+                    key={idx}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <InfoUbicacionSvgIcon width={12} height={12} />
+                    <span>
+                      ({p.x}, {p.y})
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
