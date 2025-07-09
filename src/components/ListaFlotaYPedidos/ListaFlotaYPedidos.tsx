@@ -50,7 +50,7 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
   const [searchText, setSearchText] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const { historial, minutoActualIdx } = useSimulacion();
+  const { historial, minutoActualIdx, selectedCamionId, setSelectedCamionId } = useSimulacion();
   const [ordenAscendente, setOrdenAscendente] = useState(true);
 
   const minutoActual = useMemo(() => {
@@ -250,7 +250,11 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
           </thead>
           <tbody>
             {paginatedFlotaData.map((item, index) => (
-              <tr key={index}>
+              <tr
+                key={index}
+                onClick={() => setSelectedCamionId(item.codigo)}
+                className={`clickable-row ${selectedCamionId === item.codigo ? 'selected-row' : ''}`}
+              >
                 <td>{item.codigo}</td>
                 <td>{item.posicion}</td>
                 <td>{item.capacidad}</td>
