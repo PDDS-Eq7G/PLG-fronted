@@ -299,3 +299,14 @@
 .flota-info strong {
   margin-right: 4px;
 }
+
+.clickable-row {
+  cursor: pointer;
+}
+
+.selected-row {
+  background-color: #e6f7ff;
+}
+
+.selected-row:hover {
+  background-color: #d0efff;}

@@ -78,6 +78,8 @@ interface SimulacionContextType {
   simulacionBackendFinalizada: boolean;
   setSimulacionBackendFinalizada: React.Dispatch<React.SetStateAction<boolean>>;
   tiempoTranscurrido: String;
+  selectedCamionId: string | null;
+  setSelectedCamionId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const SimulacionContext = createContext<SimulacionContextType | undefined>(undefined);
@@ -105,6 +107,8 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
   const nLlamadaRef = useRef(nLlamada); // Para usar el valor más reciente en el closure
   const currentFetchControllerRef = useRef<AbortController | null>(null); // Para abortar peticiones
   const executionIdRef = useRef(0); // Para manejar reinicios de simulación
+
+  const [selectedCamionId, setSelectedCamionId] = useState<string | null>(null);
 
   //const minSpeed = tipoSimulacion !== "COLAPSO" ? 100 : 500; // ms (Faster speed)
   const minSpeed = 100;
@@ -462,6 +466,7 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
     setSimulacionBackendFinalizada(false);
     setTiempoTranscurrido('00:00:00');
     setRealStartTime(null);
+    setSelectedCamionId(null);
 
     fetch(`${API_URL}/planificador/reiniciar?simulacionId=${simulacionIdRef.current}`, { credentials: 'include' })
       .then(() => console.log('Simulación reiniciada en backend'))
@@ -495,6 +500,8 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
         simulacionBackendFinalizada,
         setSimulacionBackendFinalizada,
         tiempoTranscurrido,
+        selectedCamionId,
+        setSelectedCamionId,
       }}
     >
       {children}
@@ -507,5 +514,4 @@ export const useSimulacion = () => {
   if (!context) {
     throw new Error('useSimulacion debe ser usado dentro de un SimulacionProvider');
   }
-  return context;
-};
+  return context;};
