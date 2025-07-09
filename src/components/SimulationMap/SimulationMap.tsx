@@ -201,6 +201,8 @@ const SimulationMap: React.FC = () => {
       }
     }
 
+    const rutaPlanificada = rutasPendientesPorCamion[selectedCamionId] ?? [];
+
     setInfoBox({
       x: camion.posicion.x * cellSize + cellSize / 2,
       y: (gridSize.alto - 1 - camion.posicion.y) * cellSize + cellSize / 2,
@@ -213,6 +215,7 @@ const SimulationMap: React.FC = () => {
         pedido: pedidoAsignado,
         cantidadAsignada: cantidadAsignada,
         llegada: '',
+        rutaPlanificada,
         capacidad:
           camion.cargaActual +
           '/' +

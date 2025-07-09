@@ -34,6 +34,7 @@ export interface InfoBoxContent {
   camionAsignado?: string;
   cantidad?: number;
   cantidadAsignada?: number;
+  rutaPlanificada?: { x: number; y: number }[];
   [key: string]: any;
 }
 
@@ -48,7 +49,7 @@ interface FloatingInfoBoxProps {
 }
 
 const BOX_WIDTH = 250;
-const BOX_HEIGHT = 140;
+const BOX_HEIGHT = 220;
 
 const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
   x,
@@ -60,6 +61,7 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
   containerHeight,
 }) => {
   const [pos, setPos] = useState({ x, y });
+  const [showRuta, setShowRuta] = useState(false);
   const isDragging = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
   const boxRef = useRef<HTMLDivElement>(null);
@@ -208,6 +210,42 @@ const FloatingInfoBox: React.FC<FloatingInfoBoxProps> = ({
             <InfoCalendarioSvgIcon width={22} height={20} />
             <span>Llegada: {formatearFecha(content.llegada)}</span>
           </div>
+        )}
+        {content.rutaPlanificada && content.rutaPlanificada.length > 0 && (
+          <>
+            <button
+              style={{
+                marginTop: '4px',
+                alignSelf: 'flex-start',
+                background: '#f5f5f5',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                padding: '2px 6px',
+                cursor: 'pointer',
+              }}
+              onClick={() => setShowRuta((s) => !s)}
+            >
+              Ruta planificada
+            </button>
+            {showRuta && (
+              <div
+                style={{
+                  maxHeight: '100px',
+                  overflowY: 'auto',
+                  marginTop: '4px',
+                  border: '1px solid #eee',
+                  padding: '4px',
+                  width: '100%',
+                }}
+              >
+                {content.rutaPlanificada.map((p, idx) => (
+                  <div key={idx}>
+                    ({p.x}, {p.y})
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
