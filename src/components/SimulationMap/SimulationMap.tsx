@@ -180,10 +180,7 @@ const SimulationMap: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!selectedCamionId) {
-      setInfoBox(prev => ({ ...prev, visible: false }));
-      return;
-    }
+    if (!selectedCamionId) return;
     if (!minutoActualData || !('camiones' in minutoActualData)) return;
 
     const camion = minutoActualData.camiones.find(c => c.codigo === selectedCamionId);
@@ -637,38 +634,11 @@ const SimulationMap: React.FC = () => {
             })
             .map((camion) => {
 
-              // Buscar el pedido y la cantidad asignada al camión actual
-              let pedidoAsignado = '';
-              let cantidadAsignada = 0;
-
-              if (minutoActualData && 'pedidos' in minutoActualData) {
-                for (const pedido of minutoActualData.pedidos) {
-                  if (pedido.asignacion && pedido.asignacion[camion.codigo]) {
-                    pedidoAsignado = "P" + String(pedido.idPedido).padStart(5, '0');
-                    cantidadAsignada = pedido.asignacion[camion.codigo].cantidadAsignada;
-                    break;
-                  }
-                }
-              }
 
               return (
               <div
                 key={camion.codigo}
-                onClick={() => setInfoBox({
-                  x: camion.posicion.x * cellSize + cellSize / 2,
-                  y: (gridSize.alto - 1 - camion.posicion.y) * cellSize + cellSize / 2,
-                  visible: true,
-                  contenido: {
-                    id: camion.codigo,
-                    tipo: 'camion',
-                    color: getColorForTruck(camion.codigo),
-                    estado: camion.estado,
-                    pedido: pedidoAsignado,
-                    cantidadAsignada: cantidadAsignada,
-                    llegada: '',
-                    capacidad: camion.cargaActual + "/" + camion.capacidadMaxima + " (" + Math.round(100.0 * (camion.cargaActual / camion.capacidadMaxima)) + "%)",
-                  },
-                })}
+                onClick={() => setSelectedCamionId(camion.codigo)}
                 style={{ position: 'absolute', left: 0, top: 0 }}
               >
                 <TruckComponent
