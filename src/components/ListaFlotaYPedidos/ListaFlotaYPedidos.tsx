@@ -50,7 +50,7 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
   const [searchText, setSearchText] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const { historial, minutoActualIdx, selectedCamionId, setSelectedCamionId } = useSimulacion();
+  const { historial, minutoActualIdx, selectedCamionId, setSelectedCamionId, selectedPedidoId, setSelectedPedidoId, selectedTanquePosicion, setSelectedTanquePosicion } = useSimulacion();
   const [ordenAscendente, setOrdenAscendente] = useState(true);
 
   const minutoActual = useMemo(() => {
@@ -293,7 +293,10 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
           </thead>
           <tbody>
             {paginatedPedidosData.map((item, index) => (
-              <tr key={index}>
+              <tr key={index}
+                onClick={() => setSelectedPedidoId(item.codigo.slice(1).replace(/^0+/, ''))}
+                className={`clickable-row ${selectedPedidoId === item.codigo ? 'selected-row' : ''}`}
+              >
                 <td>{item.codigo}</td>
                 <td>{item.posicion}</td>
                 <td>{item.cantidad}</td>
@@ -320,7 +323,10 @@ const ListaFlotaYPedidos: React.FC<ListaFlotaYPedidosProps> = ({
           </thead>
           <tbody>
             {paginatedTanquesData.map((item, index) => (
-              <tr key={index}>
+              <tr key={index}
+                onClick={() => setSelectedTanquePosicion(item.posicion)}
+                className={`clickable-row ${selectedTanquePosicion === item.posicion ? 'selected-row' : ''}`}
+              >
                 <td>{item.posicion}</td>
                 <td>{item.capacidad}</td>
               </tr>

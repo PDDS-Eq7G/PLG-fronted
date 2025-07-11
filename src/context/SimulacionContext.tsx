@@ -80,6 +80,10 @@ interface SimulacionContextType {
   tiempoTranscurrido: String;
   selectedCamionId: string | null;
   setSelectedCamionId: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedPedidoId: string | null;
+  setSelectedPedidoId: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedTanquePosicion: string | null;
+  setSelectedTanquePosicion: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const SimulacionContext = createContext<SimulacionContextType | undefined>(undefined);
@@ -109,6 +113,8 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
   const executionIdRef = useRef(0); // Para manejar reinicios de simulación
 
   const [selectedCamionId, setSelectedCamionId] = useState<string | null>(null);
+  const [selectedPedidoId, setSelectedPedidoId] = useState<string | null>(null);
+  const [selectedTanquePosicion, setSelectedTanquePosicion] = useState<string | null>(null);
 
   //const minSpeed = tipoSimulacion !== "COLAPSO" ? 100 : 500; // ms (Faster speed)
   const minSpeed = 100;
@@ -467,6 +473,8 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
     setTiempoTranscurrido('00:00:00');
     setRealStartTime(null);
     setSelectedCamionId(null);
+    setSelectedPedidoId(null);
+    setSelectedTanquePosicion(null);
 
     fetch(`${API_URL}/planificador/reiniciar?simulacionId=${simulacionIdRef.current}`, { credentials: 'include' })
       .then(() => console.log('Simulación reiniciada en backend'))
@@ -502,6 +510,10 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
         tiempoTranscurrido,
         selectedCamionId,
         setSelectedCamionId,
+        selectedPedidoId,
+        setSelectedPedidoId,
+        selectedTanquePosicion,
+        setSelectedTanquePosicion,
       }}
     >
       {children}
