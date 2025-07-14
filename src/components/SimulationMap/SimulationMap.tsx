@@ -305,7 +305,7 @@ const SimulationMap: React.FC = () => {
     const last = historial[historial.length - 1];
     const secondLast = historial[historial.length - 2];
 
-    if (secondLast && 'colapso' in  secondLast && last && 'consumoTotal' in last) {;
+    if (secondLast && 'colapso' in secondLast && last && 'consumoTotal' in last) {;
       if (minutoActualIdx === historial.length - 2) {
         setMinutoColapso(secondLast.colapso.replace('T', ' '));
         setConsumoFinal(last.consumoTotal);

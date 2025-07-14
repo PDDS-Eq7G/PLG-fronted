@@ -21,6 +21,7 @@ const ControlDeMandoCompleto: React.FC = () => {
     maxSpeed,
     isSimulando,
     setIsSimulando,
+    ultimoTiempoSimuladoValido,
     historial,
     minutoActualIdx,
     setMinutoActualIdx,
@@ -33,11 +34,10 @@ const ControlDeMandoCompleto: React.FC = () => {
     tiempoTranscurrido,
   } = useSimulacion();
 
-  const tiempoSimulado = useMemo(() => {
-    const itemActual = historial[minutoActualIdx];
-    if (itemActual && 'minuto' in itemActual) {
+  const tiempoSimuladoDisplay = useMemo(() => {
+    if (ultimoTiempoSimuladoValido) {
       // El formato en el JSON es "2025-01-01T00:00"
-      return itemActual.minuto.replace('T', ' ');
+      return ultimoTiempoSimuladoValido.replace('T', ' ');
     }
     return 'Simulación no iniciada';
   }, [minutoActualIdx, historial]);
@@ -85,7 +85,7 @@ const ControlDeMandoCompleto: React.FC = () => {
         <CancelarSimulacionButton onClick={handleCancelSimulation} />
       </div>
       <div className="panel-section">
-        <strong>Fecha y hora (simulación): </strong> {tiempoSimulado}
+        <strong>Fecha y hora (simulación): </strong> {tiempoSimuladoDisplay}
       </div>
       <div className="panel-section">
         <strong>Tiempo transcurrido: </strong> {tiempoTranscurrido}

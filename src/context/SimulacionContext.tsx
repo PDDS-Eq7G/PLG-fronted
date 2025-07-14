@@ -78,6 +78,8 @@ interface SimulacionContextType {
   simulacionBackendFinalizada: boolean;
   setSimulacionBackendFinalizada: React.Dispatch<React.SetStateAction<boolean>>;
   tiempoTranscurrido: String;
+  fechaSimulacionVisible: string;
+  ultimoTiempoSimuladoValido: string | null;
   selectedCamionId: string | null;
   setSelectedCamionId: React.Dispatch<React.SetStateAction<string | null>>;
   selectedPedidoId: string | null;
@@ -91,6 +93,8 @@ const SimulacionContext = createContext<SimulacionContextType | undefined>(undef
 export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion: String }> = ({ children, tipoSimulacion }) => {
   const [realStartTime, setRealStartTime] = useState<Date | null>(null);
   const [tiempoTranscurrido, setTiempoTranscurrido] = useState<string>('00:00:00');
+
+  const [finTiempoTranscurrido, setFinTiempoTranscurrido] = useState(false);
   
   const [velocidad, setVelocidad] = useState(0);
   const velocidadRealInicial = tipoSimulacion === "DIA_A_DIA" ? 60000 : 1000; // Real-time speed for daily simulation, 1000 for weekly or collapse (1 minute per second)
@@ -106,6 +110,10 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
   const maxIteraciones = tipoSimulacion === "SEMANAL" ? Number(673) : undefined;
   const [simulacionBackendFinalizada, setSimulacionBackendFinalizada] = useState(false);
   const simulacionIdRef = useRef<string>(uuidv4());
+
+  const [fechaSimulacionVisible, setFechaSimulacionVisible] = useState<string>('Cargando...');
+
+  const [ultimoTiempoSimuladoValido, setUltimoTiempoSimuladoValido] = useState<string | null>(null);
 
   const [nLlamada, setNLlamada] = useState(1);
   const nLlamadaRef = useRef(nLlamada); // Para usar el valor más reciente en el closure
@@ -152,8 +160,8 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-
-    if (isSimulando) {
+    
+    if (isSimulando || (tiempoTranscurrido != '00:00:00' && !finTiempoTranscurrido)){
       if (!realStartTime) {
         setRealStartTime(new Date()); // Guardamos hora de inicio
       }
@@ -254,8 +262,11 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
 
         if (data && Array.isArray(data)) {
           console.log(`Simulación: Recibidos ${data.length} elementos de datos.`);
+          const minuteData = data.filter((d) => 'minuto' in d);
+          let dataToAdd = [...minuteData];
           if (data.some(d => 'colapso' in d)) {
             console.log('Simulación: Colapso detectado.');
+            setHistorial((prevHistorial: HistorialItem[]) => [...prevHistorial, ...dataToAdd]);
             const colapsoData = data.filter((d) => 'colapso' in d);
             setHistorial((prevHistorial: HistorialItem[]) => [...prevHistorial, ...colapsoData]);
             const consumoTotalData = data.filter((d) => 'consumoTotal' in d);
@@ -263,9 +274,6 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
             setSimulacionBackendFinalizada(true); // Marcar como finalizada
             return;
           } else {
-            const minuteData = data.filter((d) => 'minuto' in d);
-            let dataToAdd = [...minuteData];
-
             console.log(`Simulación: Añadiendo ${dataToAdd.length} elementos al historial.`);
             console.log(`${isLastIteration ? 'Última' : 'No última'} iteración: ${nLlamadaRef.current}`);
 
@@ -438,9 +446,15 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
         console.log('Tab is visible again. Synchronizing simulation state.');
         
         // Check if there's new data that hasn't been displayed yet
-        if (historial.length > 0 && minutoActualIdx < historial.length - 1) {
+        const last = historial[historial.length - 1];
+        const secondLast = historial[historial.length - 2];
+        if (historial.length > 0) {
           // Fast-forward to the latest available minute in the history
-          setMinutoActualIdx(historial.length - 1);
+          if (last && 'consumoTotal' in last && secondLast && 'colapso' in secondLast && minutoActualIdx === historial.length - 2) {
+            setMinutoActualIdx(historial.length - 2);
+          } else if (last && 'consumoTotal' in last && minutoActualIdx === historial.length - 1) {
+            setMinutoActualIdx(historial.length - 1);
+          }
         }
       }
     };
@@ -453,6 +467,78 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [isSimulando, historial, minutoActualIdx]);
+  
+  useEffect(() => {
+    const last = historial[historial.length - 1];
+    const secondLast = historial[historial.length - 2];
+    // Condición de finalización: estamos en el último minuto del historial y el backend ha confirmado que no hay más datos.
+    const isPlaybackFinished = last && 'consumoTotal' in last && 
+      ((secondLast && 'colapso' in secondLast && minutoActualIdx === historial.length - 2) || 
+      minutoActualIdx === historial.length - 1);
+
+    console.log(`Playback finished: ${isPlaybackFinished}, isSimulando: ${isSimulando}, simulacionBackendFinalizada: ${simulacionBackendFinalizada}, minutoActualIdx: ${minutoActualIdx}, historial.length: ${historial.length}`);
+    if (isSimulando && simulacionBackendFinalizada && isPlaybackFinished && historial.length > 0) {
+      console.log("Fin de la reproducción detectado. Deteniendo la simulación.");
+      setIsSimulando(false); // Detener la simulación
+      setVelocidad(0); // Pausar la velocidad
+      setFinTiempoTranscurrido(true);
+    }
+  }, [minutoActualIdx, historial.length, simulacionBackendFinalizada, isSimulando]);
+
+  useEffect(() => {
+    // Si el índice es válido y hay historial...
+    if (minutoActualIdx > -1 && historial.length > minutoActualIdx) {
+      console.log(`Actualizando último tiempo simulado válido: minutoActualIdx=${minutoActualIdx}, historial.length=${historial.length}`);
+      const itemActual = historial[minutoActualIdx];
+      // Si el item de ese minuto tiene la propiedad 'minuto', lo guardamos.
+      if (itemActual && 'minuto' in itemActual) {
+        setUltimoTiempoSimuladoValido(itemActual.minuto);
+      } else if (itemActual && 'colapso' in itemActual) {
+        setUltimoTiempoSimuladoValido(itemActual.colapso);
+      }
+      // Si no tiene 'minuto', no hacemos nada, conservando el último valor guardado.
+    }
+  }, [minutoActualIdx, historial]);
+
+  useEffect(() => {
+    // Este efecto solo se aplica para la simulación DIA_A_DIA
+    if (tipoSimulacion !== 'DIA_A_DIA' || !isSimulando) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const item = historial[minutoActualIdx];
+      if (!item || !('minuto' in item)) {
+        // Si no hay un item válido, no hacemos nada.
+        return;
+      }
+
+      // Tomamos la fecha base del historial (ej: "2025-01-01 14:30")
+      const baseDate = new Date(item.minuto.replace(' ', 'T'));
+      if (isNaN(baseDate.getTime())) return;
+
+      // Tomamos los segundos de la hora real actual
+      const ahora = new Date();
+      // Y los aplicamos a nuestra fecha base de la simulación
+      baseDate.setSeconds(ahora.getSeconds());
+
+      // Formateamos y actualizamos el estado en el contexto
+      const fechaMostrada = baseDate.toLocaleString("es-PE", {
+        hour12: false,
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: '2-digit',
+      }).replace(',', '');
+      
+      setFechaSimulacionVisible(fechaMostrada);
+
+    }, 1000); // Se actualiza cada segundo
+
+    return () => clearInterval(interval);
+  }, [isSimulando, minutoActualIdx, historial, tipoSimulacion]);
 
   // Optional: Add a comprehensive reset function to the context
   // This can be called from any consumer (e.g., ControlDeMandoCompleto, SimulationMap)
@@ -472,9 +558,12 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
     setSimulacionBackendFinalizada(false);
     setTiempoTranscurrido('00:00:00');
     setRealStartTime(null);
+    setFechaSimulacionVisible('Cargando...');
+    setUltimoTiempoSimuladoValido(null);
     setSelectedCamionId(null);
     setSelectedPedidoId(null);
     setSelectedTanquePosicion(null);
+    setFinTiempoTranscurrido(false);
 
     fetch(`${API_URL}/planificador/reiniciar?simulacionId=${simulacionIdRef.current}`, { credentials: 'include' })
       .then(() => console.log('Simulación reiniciada en backend'))
@@ -508,6 +597,8 @@ export const SimulacionProvider: React.FC<{ children: ReactNode, tipoSimulacion:
         simulacionBackendFinalizada,
         setSimulacionBackendFinalizada,
         tiempoTranscurrido,
+        fechaSimulacionVisible,
+        ultimoTiempoSimuladoValido,
         selectedCamionId,
         setSelectedCamionId,
         selectedPedidoId,
