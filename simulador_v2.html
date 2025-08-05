@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulación de Camiones Avanzada</title>
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+  }
+  h1 {
+    color: #1a237e; /* Azul oscuro para el título */
+  }
+  #main-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  #grid-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #grid-container {
+    display: grid;
+    grid-template-columns: repeat(71, 10px);
+    grid-template-rows: repeat(51, 10px);
+    border: 2px solid #3949ab;
+    width: 710px;
+    height: 510px;
+    position: relative;
+    background-color: #e8eaf6;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    margin-top: 10px;
+  }
+  .grid-cell {
+    width: 10px;
+    height: 10px;
+    border-right: 1px dotted #c5cae9;
+    border-bottom: 1px dotted #c5cae9;
+    box-sizing: border-box;
+  }
+  .truck, .fixed-point, .pedido-location, .blocked-node {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    font-size: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    transition: left 0.2s linear, top 0.2s linear;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .fixed-point {
+    font-size: 8px;
+    z-index: 5;
+  }
+  .almacen { background-color: #2e7d32; }
+  .tanque { background-color: #ef6c00; }
+  .pedido-location {
+    background-color: #673ab7;
+    border-radius: 50%;
+    font-size: 6px;
+    z-index: 4;
+  }
+  .blocked-node {
+    background-color: #d32f2f;
+    z-index: 3;
+  }
+
+  #controls-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    min-width: 250px;
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .control-group label {
+    font-weight: 600;
+    color: #3949ab;
+  }
+  #controls-panel input[type="file"],
+  #controls-panel input[type="number"],
+  #controls-panel button {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 0.9em;
+  }
+  #controls-panel button {
+    background-color: #3949ab;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    border: none;
+  }
+  #controls-panel button:hover {
+    background-color: #283593;
+  }
+  #controls-panel button:disabled {
+    background-color: #9fa8da;
+    cursor: not-allowed;
+  }
+  #time-info {
+    margin-top: 15px;
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #1a237e;
+    background-color: #e8eaf6;
+    padding: 12px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+    width: calc(100% - 24px);
+  }
+
+  /* Modal Styles */
+  .modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 100; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+  }
+  .modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 25px;
+    border: 1px solid #888;
+    width: 80%; 
+    max-width: 500px;
+    border-radius: 10px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  }
+  .modal-content h2 {
+    color: #1a237e;
+    margin-top: 0;
+  }
+  .modal-content p {
+    font-size: 1.1em;
+    margin: 10px 0;
+  }
+  .close-button {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 30px;
+    font-weight: bold;
+    transition: color 0.2s;
+  }
+  .close-button:hover,
+  .close-button:focus {
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>Simulación de Flota de Camiones</h1>
+
+<div id="main-container">
+  <div id="controls-panel">
+    <div class="control-group">
+      <label for="fileInput">1. Cargar archivo JSON de simulación:</label>
+      <input type="file" id="fileInput" accept=".json">
+    </div>
+    <button id="loadButton">Cargar y Mostrar Simulación</button>
+    <hr>
+    <div class="control-group">
+      <label for="speedControl">Velocidad de animación (ms por minuto):</label>
+      <input type="number" id="speedControl" value="1000" min="50" step="50">
+    </div>
+    <button id="startButton" disabled>Iniciar Animación</button>
+    <button id="pauseButton" disabled>Pausar</button>
+    <button id="resetButton" disabled>Reiniciar</button>
+    <div id="time-info">Tiempo: N/A</div>
+  </div>
+
+  <div id="grid-wrapper">
+    <div id="grid-container"></div>
+  </div>
+</div>
+
+<div id="endModal" class="modal">
+  <div class="modal-content">
+    <span class="close-button" onclick="hideEndModal()">&times;</span>
+    <h2>Simulación Terminada</h2>
+    <p>Consumo Total de Petróleo: <span id="modalConsumption">N/A</span> galones</p>
+  </div>
+</div>
+
+<script>
+  const GRID_SIZE_X = 71;
+  const GRID_SIZE_Y = 51;
+  const CELL_SIZE = 10; // px
+
+  const ALMACEN_CENTRAL_COORDS = { x: 12, y: 8, label: 'AC' };
+  const TANQUE_INTERMEDIO_1_COORDS = { x: 42, y: 42, label: 'T1' };
+  const TANQUE_INTERMEDIO_2_COORDS = { x: 63, y: 3, label: 'T2' };
+
+  const gridContainer = document.getElementById('grid-container');
+  const timeInfo = document.getElementById('time-info');
+  const fileInput = document.getElementById('fileInput');
+  const loadButton = document.getElementById('loadButton');
+  const startButton = document.getElementById('startButton');
+  const pauseButton = document.getElementById('pauseButton');
+  const resetButton = document.getElementById('resetButton');
+  const speedControl = document.getElementById('speedControl');
+
+  let simulationSteps = []; // Almacenará los pasos de la simulación
+  let resumenData = {};     // Almacenará el objeto de resumen
+  let truckElements = {};
+  let animationInterval;
+  let currentTimeStepIndex = 0;
+  let isPaused = false;
+  let animationSpeed = parseInt(speedControl.value, 10);
+
+  /**
+   * Transforma las coordenadas del JSON (0,0 en esquina inferior IZQUIERDA)
+   * a coordenadas visuales para la grilla HTML (0,0 en esquina superior izquierda).
+   */
+  function transformCoordinates(jsonX, jsonY) {
+    const visualCol = jsonX; // X se mapea directamente
+    const visualRow = (GRID_SIZE_Y - 1) - jsonY; // Y se invierte
+    return {
+      left: visualCol * CELL_SIZE,
+      top: visualRow * CELL_SIZE
+    };
+  }
+
+  /**
+   * Crea las celdas visuales de la grilla y dibuja los puntos fijos.
+   */
+  function createGrid() {
+    gridContainer.innerHTML = ''; // Limpiar contenido previo de la grilla
+    for (let i = 0; i < GRID_SIZE_X * GRID_SIZE_Y; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('grid-cell');
+      gridContainer.appendChild(cell);
+    }
+    drawFixedPoints();
+  }
+
+  /**
+   * Dibuja los puntos fijos (almacén, tanques) en la grilla.
+   */
+  function drawFixedPoints() {
+    [ALMACEN_CENTRAL_COORDS, TANQUE_INTERMEDIO_1_COORDS, TANQUE_INTERMEDIO_2_COORDS].forEach(point => {
+      const { left, top } = transformCoordinates(point.x, point.y);
+      const pointDiv = document.createElement('div');
+      pointDiv.classList.add('fixed-point');
+      pointDiv.classList.add(point.label.startsWith('A') ? 'almacen' : 'tanque');
+      pointDiv.style.left = `${left}px`;
+      pointDiv.style.top = `${top}px`;
+      pointDiv.textContent = point.label;
+      pointDiv.title = `${point.label} (JSON: ${point.x}, ${point.y})`;
+      gridContainer.appendChild(pointDiv);
+    });
+  }
+
+  /**
+   * Genera un string de color RGB aleatorio.
+   */
+  function getRandomColor() {
+    const r = Math.floor(Math.random() * 200);
+    const g = Math.floor(Math.random() * 200);
+    const b = Math.floor(Math.random() * 200);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  /**
+   * Maneja la carga y el parseo del archivo JSON de simulación.
+   */
+  function handleFileLoad() {
+    const file = fileInput.files[0];
+    if (!file) {
+      alert("Por favor, selecciona un archivo JSON.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      try {
+        const jsonDataArray = JSON.parse(event.target.result);
+        
+        if (!Array.isArray(jsonDataArray) || jsonDataArray.length < 2) { // Debe tener al menos un paso y el resumen
+          alert("El archivo JSON debe ser un array con al menos un paso de simulación y un objeto de resumen al final.");
+          simulationSteps = [];
+          resumenData = {};
+          return;
+        }
+
+        // El último elemento es el resumen
+        resumenData = jsonDataArray.pop(); // Extrae y guarda el último elemento
+        // El resto son los pasos de la simulación
+        simulationSteps = jsonDataArray;
+
+        // La validación de duracionEjecucion se mantiene por si el campo aún existe en el JSON,
+        // pero ya no se usa para mostrar.
+        if (typeof resumenData.duracionEjecucion === 'undefined' || typeof resumenData.consumoTotal === 'undefined') {
+            alert("El objeto de resumen al final del JSON no contiene 'duracionEjecucion' o 'consumoTotal'.");
+            simulationSteps = []; // Invalidar datos si el resumen es incorrecto
+            resumenData = {};
+            return;
+        }
+
+        const firstStep = simulationSteps[0];
+        if (!firstStep || !firstStep.minuto || !firstStep.camiones || 
+            !firstStep.pedidosUbicacion || !firstStep.nodosBloqueados) {
+            alert("La estructura de los pasos de simulación no es la esperada. Cada paso debe contener 'minuto', 'camiones', 'pedidosUbicacion' y 'nodosBloqueados'.");
+            simulationSteps = [];
+            resumenData = {};
+            return;
+        }
+        
+        hideEndModal(); // Ocultar modal si estaba abierto
+        resetSimulationState();
+        timeInfo.textContent = "Datos cargados. Listo para iniciar.";
+        startButton.disabled = false;
+        resetButton.disabled = false;
+        pauseButton.disabled = true;
+      } catch (e) {
+        alert("Error al leer o parsear el archivo JSON: " + e.message);
+        console.error(e);
+        simulationSteps = [];
+        resumenData = {};
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /**
+   * Reinicia el estado de la simulación a su inicio.
+   */
+  function resetSimulationState() {
+    clearInterval(animationInterval);
+    animationInterval = null;
+    isPaused = false;
+    currentTimeStepIndex = 0;
+    truckElements = {};
+    gridContainer.querySelectorAll('.truck').forEach(el => el.remove());
+    gridContainer.querySelectorAll('.pedido-location').forEach(el => el.remove());
+    gridContainer.querySelectorAll('.blocked-node').forEach(el => el.remove());
+
+    if (simulationSteps.length > 0) {
+      prepareTrucks();
+      updateVisuals(0); // Mostrar el estado inicial (frame 0)
+    }
+  }
+
+  /**
+   * Crea y prepara los elementos visuales para los camiones
+   * basándose en los datos iniciales de la simulación.
+   */
+  function prepareTrucks() {
+    if (simulationSteps.length === 0 || !simulationSteps[0].camiones) return;
+    const initialTrucksData = simulationSteps[0].camiones;
+    if (!Array.isArray(initialTrucksData)) {
+        console.error("La propiedad 'camiones' en el primer paso de tiempo no es un array.");
+        return;
+    }
+    const trucksToDisplay = initialTrucksData.slice(0, 20); // Máximo 20 camiones
+    trucksToDisplay.forEach(truckData => {
+      if (truckData && truckData.codigo) {
+        const truckDiv = document.createElement('div');
+        truckDiv.classList.add('truck');
+        truckDiv.id = `truck-${truckData.codigo}`;
+        truckDiv.style.backgroundColor = getRandomColor();
+        truckDiv.textContent = truckData.codigo.substring(0, 3);
+        truckDiv.title = truckData.codigo;
+        gridContainer.appendChild(truckDiv);
+        truckElements[truckData.codigo] = truckDiv;
+      }
+    });
+  }
+
+  /**
+   * Actualiza todos los elementos visuales en la grilla para un índice de paso de tiempo dado.
+   * Esta función solo renderiza el estado y no avanza el tiempo de la simulación.
+   */
+  function updateVisuals(timeStepIdx) {
+    const currentStepData = simulationSteps[timeStepIdx];
+    if (!currentStepData) {
+        console.error(`No hay datos para el paso de tiempo: ${timeStepIdx}`);
+        return;
+    }
+
+    try {
+        timeInfo.textContent = `Tiempo: ${new Date(currentStepData.minuto).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'medium' })}`;
+    } catch (e) {
+        timeInfo.textContent = `Tiempo: ${currentStepData.minuto}`;
+        console.warn("Formato de 'minuto' podría no ser estándar: ", currentStepData.minuto);
+    }
+
+    // Limpiar elementos dinámicos de pasos anteriores
+    gridContainer.querySelectorAll('.pedido-location').forEach(el => el.remove());
+    gridContainer.querySelectorAll('.blocked-node').forEach(el => el.remove());
+
+    // Dibujar ubicaciones de pedidos
+    if (currentStepData.pedidosUbicacion && Array.isArray(currentStepData.pedidosUbicacion)) {
+      currentStepData.pedidosUbicacion.forEach(pedidoData => {
+        if (pedidoData && pedidoData.posicion && typeof pedidoData.posicion.x === 'number' && typeof pedidoData.posicion.y === 'number') {
+          const { left, top } = transformCoordinates(pedidoData.posicion.x, pedidoData.posicion.y);
+          const pedidoDiv = document.createElement('div');
+          pedidoDiv.classList.add('pedido-location');
+          pedidoDiv.style.left = `${left}px`;
+          pedidoDiv.style.top = `${top}px`;
+          pedidoDiv.title = `Pedido: ${pedidoData.idPedido} (JSON: ${pedidoData.posicion.x}, ${pedidoData.posicion.y})`;
+          gridContainer.appendChild(pedidoDiv);
+        }
+      });
+    }
+
+    // Dibujar nodos bloqueados
+    if (currentStepData.nodosBloqueados && Array.isArray(currentStepData.nodosBloqueados)) {
+      currentStepData.nodosBloqueados.forEach(nodoData => {
+        if (nodoData && nodoData.posicion && typeof nodoData.posicion.x === 'number' && typeof nodoData.posicion.y === 'number') {
+          const { left, top } = transformCoordinates(nodoData.posicion.x, nodoData.posicion.y);
+          const nodoDiv = document.createElement('div');
+          nodoDiv.classList.add('blocked-node');
+          nodoDiv.style.left = `${left}px`;
+          nodoDiv.style.top = `${top}px`;
+          nodoDiv.title = `Nodo Bloqueado (JSON: ${nodoData.posicion.x}, ${nodoData.posicion.y})`;
+          gridContainer.appendChild(nodoDiv);
+        }
+      });
+    }
+
+    // Actualizar camiones
+    const activeTrucksThisStep = new Set();
+    if (currentStepData.camiones && Array.isArray(currentStepData.camiones)) {
+      currentStepData.camiones.slice(0, 20).forEach(truckData => {
+        if (truckData && truckData.codigo && truckData.posicion &&
+            typeof truckData.posicion.x === 'number' && typeof truckData.posicion.y === 'number') {
+          activeTrucksThisStep.add(truckData.codigo);
+          let truckElement = truckElements[truckData.codigo];
+          if (!truckElement) { // Crear elemento de camión si aparece más tarde
+            const truckDiv = document.createElement('div');
+            truckDiv.classList.add('truck');
+            truckDiv.id = `truck-${truckData.codigo}`;
+            truckDiv.style.backgroundColor = getRandomColor();
+            truckDiv.textContent = truckData.codigo.substring(0, 3);
+            truckDiv.title = truckData.codigo;
+            gridContainer.appendChild(truckDiv);
+            truckElements[truckData.codigo] = truckDiv;
+            truckElement = truckDiv;
+          }
+          const { left, top } = transformCoordinates(truckData.posicion.x, truckData.posicion.y);
+          truckElement.style.left = `${left}px`;
+          truckElement.style.top = `${top}px`;
+          truckElement.style.display = 'flex';
+        }
+      });
+    }
+    // Opcional: ocultar camiones no presentes en este paso
+    Object.keys(truckElements).forEach(truckId => {
+        if (!activeTrucksThisStep.has(truckId)) {
+            // truckElements[truckId].style.display = 'none';
+        }
+    });
+  }
+  
+  /**
+   * La función principal del bucle de animación, llamada por setInterval.
+   */
+  function animationLoop() {
+    if (isPaused) return; // No hacer nada si está pausado
+
+    if (currentTimeStepIndex >= simulationSteps.length) {
+        clearInterval(animationInterval);
+        animationInterval = null;
+        showEndModal(); // Mostrar modal de resumen
+        startButton.disabled = false; // Permitir reiniciar
+        pauseButton.disabled = true;
+        pauseButton.textContent = "Pausar";
+        return;
+    }
+
+    updateVisuals(currentTimeStepIndex);
+    currentTimeStepIndex++; // Incrementar para el siguiente tick
+  }
+
+  /**
+   * Inicia o reanuda la animación.
+   */
+  function startAnimation() {
+    if (simulationSteps.length === 0) {
+      alert("Carga primero los datos de la simulación.");
+      return;
+    }
+
+    hideEndModal(); // Asegurar que el modal esté oculto al iniciar/reanudar
+
+    if (currentTimeStepIndex >= simulationSteps.length) { // Si se intenta iniciar cuando ya terminó
+        if (simulationSteps.length > 0) { 
+            showEndModal();
+        }
+        startButton.disabled = false;
+        pauseButton.disabled = true;
+        resetButton.disabled = false;
+        return; 
+    }
+
+    isPaused = false;
+    startButton.disabled = true;
+    pauseButton.disabled = false;
+    pauseButton.textContent = "Pausar";
+    resetButton.disabled = false;
+    animationSpeed = parseInt(speedControl.value, 10) || 1000;
+
+    if (animationInterval) clearInterval(animationInterval); // Limpiar cualquier intervalo existente
+
+    // Llamar al bucle una vez inmediatamente para renderizar el frame actual/primero
+    animationLoop(); 
+
+    // Solo establecer intervalo si no ha terminado con la primera llamada a animationLoop
+    if (currentTimeStepIndex < simulationSteps.length && animationInterval === null) {
+        animationInterval = setInterval(animationLoop, animationSpeed);
+    }
+  }
+
+  /**
+   * Pausa o reanuda la animación.
+   */
+  function pauseAnimation() {
+    if (currentTimeStepIndex >= simulationSteps.length && !isPaused) { // Si terminó y no está pausado
+        return;
+    }
+
+    isPaused = !isPaused;
+    if (isPaused) {
+      pauseButton.textContent = "Reanudar";
+    } else { // Reanudando
+      pauseButton.textContent = "Pausar";
+      animationSpeed = parseInt(speedControl.value, 10) || 1000; // Obtener la velocidad más reciente
+      
+      if (animationInterval) { // Limpiar el intervalo viejo si existía
+          clearInterval(animationInterval);
+          animationInterval = null; 
+      }
+      // startAnimation se encargará de reanudar con la velocidad correcta y el índice actual
+      if (currentTimeStepIndex < simulationSteps.length) {
+          startAnimation();
+      } else {
+          showEndModal(); // Mostrar modal si, por alguna razón, está al final
+      }
+    }
+  }
+
+  /**
+   * Reinicia la animación al principio.
+   */
+  function resetAnimation() {
+    clearInterval(animationInterval);
+    animationInterval = null;
+    isPaused = false;
+    currentTimeStepIndex = 0;
+    
+    hideEndModal(); // Ocultar modal al reiniciar
+
+    gridContainer.querySelectorAll('.truck').forEach(el => el.remove());
+    gridContainer.querySelectorAll('.pedido-location').forEach(el => el.remove());
+    gridContainer.querySelectorAll('.blocked-node').forEach(el => el.remove());
+    truckElements = {};
+
+    if (simulationSteps.length > 0) {
+      prepareTrucks();
+      updateVisuals(0); // Mostrar el primer frame
+      timeInfo.textContent = "Simulación Reiniciada. Listo para iniciar.";
+      startButton.disabled = false;
+    } else {
+      timeInfo.textContent = "Carga datos para reiniciar.";
+      startButton.disabled = true;
+    }
+    pauseButton.disabled = true;
+    pauseButton.textContent = "Pausar";
+    resetButton.disabled = simulationSteps.length === 0;
+  }
+
+  /**
+   * Listener de evento para cambios en el control de velocidad.
+   */
+  speedControl.addEventListener('change', (event) => {
+    const newSpeed = parseInt(event.target.value, 10);
+    if (isNaN(newSpeed) || newSpeed < 50) {
+      animationSpeed = 50;
+      speedControl.value = 50;
+    } else {
+      animationSpeed = newSpeed;
+    }
+
+    // Si la animación está CORRIENDO y NO PAUSADA, reiniciar el intervalo con la nueva velocidad
+    if (animationInterval && !isPaused) { 
+      clearInterval(animationInterval);
+      animationInterval = setInterval(animationLoop, animationSpeed);
+    }
+    // Si está pausada o no iniciada, solo actualizar `animationSpeed` es suficiente.
+    // `startAnimation` (al reanudar/iniciar) tomará la nueva velocidad.
+  });
+
+  /**
+   * Muestra el modal de fin de simulación con los datos de resumen.
+   */
+  function showEndModal() {
+    const modal = document.getElementById('endModal');
+    // La línea para 'modalDuration' ha sido eliminada
+    document.getElementById('modalConsumption').textContent = resumenData.consumoTotal !== undefined ? resumenData.consumoTotal.toFixed(4) : 'N/A'; // Formatear a 4 decimales
+    if (modal) modal.style.display = 'block';
+  }
+
+  /**
+   * Oculta el modal de fin de simulación.
+   */
+  function hideEndModal() {
+    const modal = document.getElementById('endModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  // Listeners de evento para los botones
+  loadButton.addEventListener('click', handleFileLoad);
+  startButton.addEventListener('click', startAnimation);
+  pauseButton.addEventListener('click', pauseAnimation);
+  resetButton.addEventListener('click', resetAnimation);
+
+  // Configuración inicial
+  createGrid(); // Dibujar la grilla base y los puntos fijos una vez al cargar la página
+  timeInfo.textContent = "Por favor, carga un archivo JSON.";
+
+</script>
+
+</body>
+</html>
